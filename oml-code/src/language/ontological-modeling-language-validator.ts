@@ -9,7 +9,7 @@ export function registerValidationChecks(services: OntologicalModelingLanguageSe
     const registry = services.validation.ValidationRegistry;
     const validator = services.validation.OntologicalModelingLanguageValidator;
     const checks: ValidationChecks<OntologicalModelingLanguageAstType> = {
-        Person: validator.checkPersonStartsWithCapital
+        // Person: validator.checkPersonStartsWithCapital
     };
     registry.register(checks, validator);
 }

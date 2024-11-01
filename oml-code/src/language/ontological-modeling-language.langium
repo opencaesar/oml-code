@@ -103,22 +103,34 @@ UnreifiedRelation:
         ("transitive")?
     "]")? PropertySpecialization? PropertyEquivalence;
 
+// Hidden terminal
+hidden terminal WS: /\s+/;
+hidden terminal ML_COMMENT: /\/\*[\s\S]*?\*\//;
+hidden terminal SL_COMMENT: /\/\/[^\n\r]*/;
+
 // Placeholder rules to suppress warnings
-terminal DescriptionBox: "PLACEHOLDER";
-terminal NAMESPACE: "PLACEHOLDER";
-terminal ID: "PLACEHOLDER";
-terminal Literal: "PLACEHOLDER";
-terminal Predicate: "PLACEHOLDER";
-terminal PropertySpecialization: "PLACEHOLDER";
-terminal PropertyEquivalence: "PLACEHOLDER";
-terminal Concept: "PLACEHOLDER";
-terminal RelationEntity: "PLACEHOLDER";
-terminal LiteralEnumerationAxiom: "PLACEHOLDER";
-terminal ScalarSpecialization: "PLACEHOLDER";
-terminal ScalarEquivalence: "PLACEHOLDER";
-terminal KeyAxiom: "PLACEHOLDER";
-terminal EntitySpecialization: "PLACEHOLDER";
-terminal EntityEquivalence: "PLACEHOLDER";
-terminal Term: "PLACEHOLDER";
-terminal DescriptionMember: "PLACEHOLDER";
-terminal Statement: "PLACEHOLDER";
+// These need to go before visible terminals otherwise they will be swallowed
+// by the ID terminal
+terminal DescriptionBox: "PLACEHOLDER000";
+terminal Literal: "PLACEHOLDER003";
+terminal Predicate: "PLACEHOLDER004";
+terminal PropertySpecialization: "PLACEHOLDER005";
+terminal PropertyEquivalence: "PLACEHOLDER006";
+terminal Concept: "PLACEHOLDER007";
+terminal RelationEntity: "PLACEHOLDER008";
+terminal LiteralEnumerationAxiom: "PLACEHOLDER009";
+terminal ScalarSpecialization: "PLACEHOLDER010";
+terminal ScalarEquivalence: "PLACEHOLDER011";
+terminal KeyAxiom: "PLACEHOLDER012";
+terminal EntitySpecialization: "PLACEHOLDER013";
+terminal EntityEquivalence: "PLACEHOLDER014";
+terminal Term: "PLACEHOLDER015";
+terminal DescriptionMember: "PLACEHOLDER016";
+terminal Statement: "PLACEHOLDER017";
+
+// Visible termials
+terminal NAMESPACE: /<\S*>/; // TODO: Disallow '>', '#', etc.
+terminal ID: "^"? (ALPHA|NUMERIC|SPECIAL) (ALPHA|NUMERIC|SPECIAL|"$")*;
+terminal ALPHA: /[a-zA-Z]/;
+terminal NUMERIC: /[0-9]/;
+terminal SPECIAL: /[-_.~%]/;
