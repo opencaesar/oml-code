@@ -9,13 +9,21 @@ VocabularyBox:
 Vocabulary:
     // ownedAnnotations+=Annotation*
     'vocabulary' namespace=NAMESPACE 'as' prefix=ID '{'
-        ownedImports+=(Extension|Usage)*
-        ownedStatements+=VocabularyStatement*
+        (ownedImports+=(Extension) | ownedImports+=(Usage))*
+        (ownedStatements+=VocabularyStatement)*
     '}';
+
 
 VocabularyStatement:
     // Rule |
     SpecializableTerm;
+
+// TODO: Implement specific import rules as defined by the spec:
+// OML supports several kinds of imports for each one of its ontology kinds:
+// * Vocabulary: extends Vocabulary, uses Description
+// * Vocabulary Bundle: extends VocabularyBundle, includes Vocabulary
+// * Description: extends Description, uses Vocabulary
+// * Description Bundle: extends DescriptionBundle, includes Description, uses Vocabulary, uses VocabularyBundle
 
 Import:
     Extension |
@@ -23,13 +31,13 @@ Import:
     Inclusion;
 
 Extension:
-    'extends' namespace=NAMESPACE ('as' prefix=ID)?;
+    'extends' imported=[Vocabulary:NAMESPACE] ('as' prefix=ID)?;
 
 Usage:
-    'uses' namespace=NAMESPACE ('as' prefix=ID)?;
+    'uses' imported=[Vocabulary:NAMESPACE] ('as' prefix=ID)?;
 
 Inclusion:
-    'includes' namespace=NAMESPACE ('as' prefix=ID)?;
+    'includes' imported=[Vocabulary:NAMESPACE] ('as' prefix=ID)?;
 
 // Rule:
 //     ownedAnnotations+=Annotation*
@@ -138,19 +146,50 @@ UnreifiedRelation:
 SpecializationAxiom:
 	superTerm=[SpecializableTerm:Ref];
 
-hidden terminal WS: /\s+/;
 
-Ref returns string: 			        		        QNAME |	ID;
+//--------------
 
+Ref returns string: 							ID | QNAME | IRI;
+
+// terminal CrossRef returns string: 						QNAME | IRI;
+
+// terminal Boolean returns string:						BOOLEAN_STR;
+
+// terminal UnsignedInteger returns number: 				UNSIGNED_INTEGER_STR;
+
+// terminal Integer returns number: 						UNSIGNED_INTEGER_STR | INTEGER_STR;
+
+// terminal Decimal returns number:						DECIMAL_STR;
+
+// terminal Double returns number:							DOUBLE_STR;
 
 //----------------------------
 
-terminal NAMESPACE:					                    /<[^> #]*(#|\/)>/;
+// terminal BOOLEAN_STR returns boolean:					/(false|true)/;
 
-terminal ID returns string:								IDFRAG;
+// terminal UNSIGNED_INTEGER_STR returns number:			NUMERIC+;
+
+// terminal INTEGER_STR returns number:					('+'|'-')? NUMERIC+;
+
+// terminal DECIMAL_STR returns number:					('+'|'-')? (NUMERIC+('.'NUMERIC*)? | ('.'NUMERIC+));
+
+// terminal DOUBLE_STR returns number:						('+'|'-')? (NUMERIC+('.'NUMERIC*)? | ('.'NUMERIC+)) ('e'|'E') ('+'|'-')? NUMERIC+;
+
+// terminal STRING returns number:							('"' (!('"'|'\\') | '\\'.)* '"') | ("'" (!("'"|'\\') | '\\'.)* "'") | ("'''" -> "'''") | '"""' -> '"""';
+
+terminal NAMESPACE returns string:						/<[^# ]*[#/]>/; // /<[^> #]*[#/]>/; // '<' (!('>'|' '|'#'))* ('#'|'/') '>' 
+
+terminal IRI returns string:							/<[^ ]*>/; // '<' (!('>'|' '))* '>'
+
+terminal ID returns string:								/[_a-zA-Z][\w_]*/;
 
 terminal QNAME returns string:							IDFRAG ':' IDFRAG;
 
+hidden terminal ML_COMMENT: 							/\/\*[\s\S]*?\*\//;
+ 
+hidden terminal SL_COMMENT:                             /\/\/[^\n\r]*/;
+ 
+hidden terminal WS:                                     /\s+/;
 
 //----------------------------
 

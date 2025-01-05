@@ -2,6 +2,7 @@ import { type Module, inject } from 'langium';
 import { createDefaultModule, createDefaultSharedModule, type DefaultSharedModuleContext, type LangiumServices, type LangiumSharedServices, type PartialLangiumServices } from 'langium/lsp';
 import { OntologicalModelingLanguageGeneratedModule, OntologicalModelingLanguageGeneratedSharedModule } from './generated/module.js';
 import { OntologicalModelingLanguageValidator, registerValidationChecks } from './ontological-modeling-language-validator.js';
+import { OMLScopeComputation } from './ontological-modeling-language-scope.js';
 
 /**
  * Declaration of custom services - add your own service classes here.
@@ -26,6 +27,9 @@ export type OntologicalModelingLanguageServices = LangiumServices & OntologicalM
 export const OntologicalModelingLanguageModule: Module<OntologicalModelingLanguageServices, PartialLangiumServices & OntologicalModelingLanguageAddedServices> = {
     validation: {
         OntologicalModelingLanguageValidator: () => new OntologicalModelingLanguageValidator()
+    },
+    references: {
+        ScopeComputation: (services) => new OMLScopeComputation(services)
     }
 };
 
