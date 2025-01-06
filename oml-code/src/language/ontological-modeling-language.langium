@@ -149,7 +149,7 @@ SpecializationAxiom:
 
 //--------------
 
-Ref returns string: 							ID | QNAME | IRI;
+Ref returns string: 							 QNAME | ID | IRI;
 
 // terminal CrossRef returns string: 						QNAME | IRI;
 
@@ -181,9 +181,9 @@ terminal NAMESPACE returns string:						/<[^# ]*[#/]>/; // /<[^> #]*[#/]>/; // '
 
 terminal IRI returns string:							/<[^ ]*>/; // '<' (!('>'|' '))* '>'
 
-terminal ID returns string:								/[_a-zA-Z][\w_]*/;
+terminal QNAME returns string:							ID ':' ID;
 
-terminal QNAME returns string:							IDFRAG ':' IDFRAG;
+terminal ID returns string:								IDFRAG;
 
 hidden terminal ML_COMMENT: 							/\/\*[\s\S]*?\*\//;
  
