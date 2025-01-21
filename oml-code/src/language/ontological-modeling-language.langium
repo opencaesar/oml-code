@@ -1,60 +1,58 @@
 grammar OntologicalModelingLanguage
 
 entry Ontology:
-    VocabularyBox;
+    VocabularyBox
+    | DescriptionBox;
+
+Annotation:
+    '@' {infer Annotation} property=[AnnotationProperty:Ref] (AnnotationValue ("," AnnotationValue)*)?;
+
+fragment AnnotationValue:
+    literalValues+=Literal /* | referencedValues+=[Member:Ref] */;
 
 VocabularyBox:
-    Vocabulary;
+    Vocabulary |
+    VocabularyBundle;
 
 Vocabulary:
-    // ownedAnnotations+=Annotation*
+    ownedAnnotations+=Annotation*
     'vocabulary' namespace=NAMESPACE 'as' prefix=ID '{'
         (ownedImports+=(Extension) | ownedImports+=(Usage))*
         (ownedStatements+=VocabularyStatement)*
     '}';
 
+VocabularyBundle:
+    ownedAnnotations+=Annotation*
+    'vocabulary' 'bundle' namespace=NAMESPACE 'as' prefix=ID '{'
+        ownedImports+=(Extension|Inclusion)*
+    '}';
 
-VocabularyStatement:
-    // Rule |
-    SpecializableTerm;
+DescriptionBox:
+	Description |
+	DescriptionBundle;
 
-// TODO: Implement specific import rules as defined by the spec:
-// OML supports several kinds of imports for each one of its ontology kinds:
-// * Vocabulary: extends Vocabulary, uses Description
-// * Vocabulary Bundle: extends VocabularyBundle, includes Vocabulary
-// * Description: extends Description, uses Vocabulary
-// * Description Bundle: extends DescriptionBundle, includes Description, uses Vocabulary, uses VocabularyBundle
+Description:
+	ownedAnnotations+=Annotation*
+	'description' namespace=NAMESPACE 'as' prefix=ID '{'
+		ownedImports+=(Extension|Usage)*
+		ownedStatements+=DescriptionStatement*
+	'}';
 
-Import:
-    Extension |
-    Usage |
-    Inclusion;
-
-Extension:
-    'extends' imported=[Vocabulary:NAMESPACE] ('as' prefix=ID)?;
-
-Usage:
-    'uses' imported=[Vocabulary:NAMESPACE] ('as' prefix=ID)?;
-
-Inclusion:
-    'includes' imported=[Vocabulary:NAMESPACE] ('as' prefix=ID)?;
-
-// Rule:
-//     ownedAnnotations+=Annotation*
-//     ('rule' name=ID | 'ref' 'rule' ref=[Rule:ID]) ('['
-//         (antecedent+=Predicate ('&' antecedent+=Predicate)* '->' consequent+=Predicate ('&' consequent+=Predicate)*)?
-
-//     ']')?;
+DescriptionBundle:
+	ownedAnnotations+=Annotation*
+	'description' 'bundle' namespace=NAMESPACE 'as' prefix=ID '{'
+		ownedImports+=(Extension|Usage|Inclusion)*
+	'}';
 
 SpecializableTerm:
     Type |
     AnnotationProperty |
-    // ScalarProperty |
+    ScalarProperty |
     UnreifiedRelation;
 
 Type:
-    Entity/* |
-    Scalar*/;
+    Entity |
+    Scalar;
 
 Entity:
     Aspect |
@@ -62,35 +60,29 @@ Entity:
     RelationEntity;
 
 Aspect:
-    // ownedAnnotations+=Annotation*
+    ownedAnnotations+=Annotation*
 	('aspect' name=ID | 'ref' 'aspect' ref=[Aspect:Ref]) 
-    /* 
     ('['
 		(ownedKeys+=KeyAxiom)* 
 	']')?
-    */
-     /* (EntitySpecialization)? (EntityEquivalence)? */;
+    (EntitySpecialization)? (EntityEquivalence)?;
 
 Concept:
-	// ownedAnnotations+=Annotation*
+	ownedAnnotations+=Annotation*
 	('concept' name=ID | 'ref' 'concept' ref=[Concept:Ref]) 
-    /* 
     ('['
 		(ownedEnumeration=InstanceEnumerationAxiom)?
 		(ownedKeys+=KeyAxiom)* 
 	']')? 
-    */
-    (EntitySpecialization)? /* (EntityEquivalence)? */;
+    (EntitySpecialization)? (EntityEquivalence)?;
 
-// Langium doesn't support optional elements for unordered groups, so these
-// keyword statements have to be mandatory for now
 RelationEntity:
-    // ownedAnnotations+=Annotation*
+    ownedAnnotations+=Annotation*
 	('relation' 'entity' name=ID | 'ref' 'relation' 'entity' ref=[RelationEntity:Ref]) ('['
 		('from' sources+=[Entity:Ref] (',' sources+=[Entity:Ref])*)?
 		('to' targets+=[Entity:Ref] (',' targets+=[Entity:Ref])*)?
-		/* (forwardRelation=ForwardRelation)? */
-		/* (reverseRelation=ReverseRelation)? */
+		(forwardRelation=ForwardRelation)?
+		(reverseRelation=ReverseRelation)?
 		(
             (functional?='functional') &
             (inverseFunctional?='inverse' 'functional') &
@@ -100,34 +92,119 @@ RelationEntity:
             (irreflexive?='irreflexive') &
             (transitive?='transitive')
          )
-		/* (ownedKeys+=KeyAxiom)* */
-	']')? (EntitySpecialization)? /* (EntityEquivalence)? */;
+		(ownedKeys+=KeyAxiom)*
+	']')? (EntitySpecialization)? (EntityEquivalence)?;
 
 fragment EntitySpecialization infers Entity:
 	'<' (ownedSpecializations+=SpecializationAxiom (',' ownedSpecializations+=SpecializationAxiom)* 
-		/*
         |
 		(ownedSpecializations+=SpecializationAxiom (',' ownedSpecializations+=SpecializationAxiom)*)? '['
 			ownedPropertyRestrictions+=PropertyRestrictionAxiom*
-		']'
-        */);
+		']');
 
+fragment EntityEquivalence infers Entity:
+	'=' ownedEquivalences+=EntityEquivalenceAxiom (',' ownedEquivalences+=EntityEquivalenceAxiom)*;
 
+EntityEquivalenceAxiom:
+	superEntities+=[Entity:Ref] ('&' superEntities+=[Entity:Ref])*
+	|
+	{infer EntityEquivalenceAxiom} 
+	(superEntities+=[Entity:Ref] ('&' superEntities+=[Entity:Ref])*)? '['
+		ownedPropertyRestrictions+=PropertyRestrictionAxiom*
+	']';
+
+Scalar:
+	ownedAnnotations+=Annotation*
+	('scalar' name=ID | 'ref' 'scalar' ref=[Scalar:Ref]) ('['
+		 ownedEnumeration=LiteralEnumerationAxiom
+	']')? (ScalarSpecialization)? (ScalarEquivalence)?;
+
+fragment ScalarSpecialization infers Scalar:
+	'<' ownedSpecializations+=SpecializationAxiom (',' ownedSpecializations+=SpecializationAxiom)*;
+
+fragment ScalarEquivalence infers Scalar:
+	'=' ownedEquivalences+=ScalarEquivalenceAxiom (',' ownedEquivalences+=ScalarEquivalenceAxiom)*;
+
+/*
+
+ScalarEquivalenceAxiom:
+	superScalar=[Scalar:Ref] ('['
+		(('length' length=UnsignedInteger)? &
+		 ('minLength' minLength=UnsignedInteger)? &
+		 ('maxLength' maxLength=UnsignedInteger)? &
+		 ('pattern' pattern=STRING)? &
+		 ('language' language=ID)? &
+		 ('minInclusive' minInclusive=Literal)? &
+		 ('minExclusive' minExclusive=Literal)? &
+		 ('maxInclusive' maxInclusive=Literal)? &
+		 ('maxExclusive' maxExclusive=Literal)?)
+	']')?;
+
+* * * * * * * * * *
+
+    Because optional elements in unordered groups are unsupported, I don't see
+    how to port this rule while retaining its original behavior.
+    My main idea for how to replicate similar behavior to the original is using
+    the following rule in conjunction with a validation rule that doesn't
+    allow you to populate a field multiple times.
+    Additionally, because fields like 'length' may be populated multiple times,
+    only grab the first value if one is present
+
+* * * * * * * * * *
+
+*/
+
+ScalarEquivalenceAxiom:
+	superScalar=[Scalar:Ref] ('['
+		(('length' length+=UnsignedInteger) |
+		 ('minLength' minLength+=UnsignedInteger) |
+		 ('maxLength' maxLength+=UnsignedInteger) |
+		 ('pattern' pattern+=STRING) |
+		 ('language' language+=ID) |
+		 ('minInclusive' minInclusive+=Literal) |
+		 ('minExclusive' minExclusive+=Literal) |
+		 ('maxInclusive' maxInclusive+=Literal) |
+		 ('maxExclusive' maxExclusive+=Literal))*
+	']')?;
+
+Property:
+	AnnotationProperty |
+	SemanticProperty;
 
 AnnotationProperty:
-	// ownedAnnotations+=Annotation*
+	ownedAnnotations+=Annotation*
 	(('annotation' 'property' name=ID) | ('ref' 'annotation' 'property' ref=[AnnotationProperty:Ref]))
-		/* (PropertySpecialization)? (PropertyEquivalence)? */;
+	    (PropertySpecialization)? (PropertyEquivalence)?;
+
+
+SemanticProperty:
+	ScalarProperty |
+	Relation;
+
+ScalarProperty:
+	ownedAnnotations+=Annotation*
+	('scalar' 'property' name=ID | 'ref' 'scalar' 'property' ref=[ScalarProperty:Ref]) ('['
+		('domain' domains+=[Entity:Ref] (',' domains+=[Entity:Ref])*)?
+		('range' ranges+=[Scalar:Ref] (',' ranges+=[Scalar:Ref])*)?
+		(functional?='functional')?
+	']')? (PropertySpecialization)? (PropertyEquivalence)?;
 
 Relation:
+	ForwardRelation |
+	ReverseRelation |
 	UnreifiedRelation;
 
+ForwardRelation:
+	ownedAnnotations+=Annotation*
+	'forward' name=ID;
+
 ReverseRelation:
-	// ownedAnnotations+=Annotation*
+	ownedAnnotations+=Annotation*
 	'reverse' name=ID;
 
+
 UnreifiedRelation:
-	// ownedAnnotations+=Annotation*
+	ownedAnnotations+=Annotation*
 	('relation' name=ID | 'ref' 'relation' ref=[Relation:Ref]) ('['
 		('from' sources+=[Entity:Ref] (',' sources+=[Entity:Ref])*)?
 		('to' targets+=[Entity:Ref] (',' targets+=[Entity:Ref])*)?
@@ -141,41 +218,266 @@ UnreifiedRelation:
             (irreflexive?='irreflexive') &
             (transitive?='transitive')
         )
-	']')? /* (PropertySpecialization)? (PropertyEquivalence)? */;
+	']')? (PropertySpecialization)? (PropertyEquivalence)?;
+
+
+fragment PropertySpecialization infers SpecializableProperty:
+	'<' ownedSpecializations+=SpecializationAxiom (',' ownedSpecializations+=SpecializationAxiom)*;
+
+fragment PropertyEquivalence infers SpecializableProperty:
+	'=' ownedEquivalences+=PropertyEquivalenceAxiom (',' ownedEquivalences+=PropertyEquivalenceAxiom)*;
+
+PropertyEquivalenceAxiom:
+	superProperty=[Property:Ref];
+
+Rule:
+	ownedAnnotations+=Annotation*
+	('rule' name=ID | 'ref' 'rule' ref=[Rule:Ref]) ('['
+		(antecedent+=Predicate ('&' antecedent+=Predicate)* '->' consequent+=Predicate ('&' consequent+=Predicate)*)?
+	']')?;
+
+BuiltIn:
+	ownedAnnotations+=Annotation*
+	('builtin' name=ID | 'ref' 'builtin' ref=[BuiltIn:Ref]);
+
+AnonymousInstance:
+	AnonymousConceptInstance |
+	AnonymousRelationInstance;
+
+AnonymousConceptInstance:
+	{infer AnonymousConceptInstance} (':' type=[Concept:Ref])? '['
+		ownedPropertyValues+=PropertyValueAssertion*
+	']';
+	
+AnonymousRelationInstance:
+	target=[NamedInstance:Ref] '['
+		ownedPropertyValues+=PropertyValueAssertion*
+	']';
+
+NamedInstance:
+	ConceptInstance |
+	RelationInstance;
+
+ConceptInstance:
+	ownedAnnotations+=Annotation*
+	('instance' name=ID | 'ref' 'instance' ref=[ConceptInstance:Ref]) (':' ownedTypes+=ConceptTypeAssertion (',' ownedTypes+=ConceptTypeAssertion)*)? ('['
+		ownedPropertyValues+=PropertyValueAssertion*
+	']')?;
+	
+RelationInstance:
+	ownedAnnotations+=Annotation*
+	('relation' 'instance' name=ID | 'ref' 'relation' 'instance' ref=[RelationInstance:Ref]) (':' ownedTypes+=RelationTypeAssertion (',' ownedTypes+=RelationTypeAssertion)*)? ('['
+		('from' sources+=[NamedInstance:Ref] (',' sources+=[NamedInstance:Ref])*)? 
+		('to' targets+=[NamedInstance:Ref] (',' targets+=[NamedInstance:Ref])*)?
+		ownedPropertyValues+=PropertyValueAssertion*
+	']')?;
+
+VocabularyStatement:
+	Rule |
+	BuiltIn |
+	SpecializableTerm;
+
+DescriptionStatement:
+	NamedInstance;
+
+Import:
+    Extension |
+    Usage |
+    Inclusion;
+
+Extension infers Import:
+    kind=Extends imported=[Vocabulary:NAMESPACE] ('as' prefix=ID)?;
+
+Usage infers Import:
+    kind=Uses imported=[Vocabulary:NAMESPACE] ('as' prefix=ID)?;
+
+Inclusion infers Import:
+    kind=Includes imported=[Vocabulary:NAMESPACE] ('as' prefix=ID)?;
 
 SpecializationAxiom:
 	superTerm=[SpecializableTerm:Ref];
 
+PropertyRestrictionAxiom:
+	PropertySelfRestrictionAxiom |
+	PropertyRangeRestrictionAxiom |
+	PropertyCardinalityRestrictionAxiom |
+	PropertyValueRestrictionAxiom;
+
+PropertyRangeRestrictionAxiom:
+	'restricts' kind=(RangeRestrictionKind) property=[SemanticProperty:Ref] 'to' range=[Type:Ref];
+
+PropertyCardinalityRestrictionAxiom:
+	'restricts' property=[SemanticProperty:Ref] 'to' kind=CardinalityRestrictionKind cardinality=UnsignedInteger (range=[Type:Ref])?;
+
+PropertyValueRestrictionAxiom:
+	'restricts' property=[SemanticProperty:Ref] 'to' (literalValue=Literal | containedValue=AnonymousInstance | referencedValue=[NamedInstance:Ref]);
+
+PropertySelfRestrictionAxiom:
+	'restricts' property=[SemanticProperty:Ref] 'to' 'self';
+
+KeyAxiom:
+	'key' properties+=[Property:Ref] (',' properties+=[Property:Ref])*;
+
+InstanceEnumerationAxiom:
+	'oneOf' instances+=[ConceptInstance:Ref] (',' instances+=[ConceptInstance:Ref])*;
+
+LiteralEnumerationAxiom:
+	'oneOf' literals+=Literal (',' literals+=Literal)*;
+
+ConceptTypeAssertion infers TypeAssertion:
+	type=[Concept:Ref];
+
+RelationTypeAssertion infers TypeAssertion:
+	type=[RelationEntity:Ref];
+
+PropertyValueAssertion:
+	property=[SemanticProperty:Ref] PropertyValue ("," PropertyValue)*;
+
+fragment PropertyValue infers PropertyValueAssertion:
+	(literalValues+=Literal | containedValues+=AnonymousInstance | referencedValues+=[NamedInstance:Ref]);
+
+Predicate:
+	UnaryPredicate |
+	BinaryPredicate |
+	BuiltInPredicate;
+
+UnaryPredicate:
+	TypePredicate |
+	RelationEntityPredicate;
+	
+BinaryPredicate:
+	PropertyPredicate |
+	SameAsPredicate |
+	DifferentFromPredicate;
+
+TypePredicate:
+	type=[Type:Ref] '(' argument=Argument ')';
+	
+RelationEntityPredicate:
+	type=[RelationEntity:Ref] '(' argument1=Argument ',' argument=Argument ',' argument2=Argument ')';
+
+PropertyPredicate:
+	property=[Property:Ref] '(' argument1=Argument ',' argument2=Argument ')';
+
+SameAsPredicate:
+	'sameAs' '(' argument1=Argument ',' argument2=Argument ')';
+
+DifferentFromPredicate:
+	'differentFrom' '(' argument1=Argument ',' argument2=Argument ')';
+
+BuiltInPredicate:
+	'builtIn' '(' builtIn=[BuiltIn:Ref] ',' arguments+=Argument (',' arguments+=Argument)* ')';
+
+Argument:
+	variable=ID | literal=Literal | instance=[NamedInstance:CrossRef];
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// TODO: Implement specific import rules as defined by the spec:
+// OML supports several kinds of imports for each one of its ontology kinds:
+// * Vocabulary: extends Vocabulary, uses Description
+// * Vocabulary Bundle: extends VocabularyBundle, includes Vocabulary
+// * Description: extends Description, uses Vocabulary
+// * Description Bundle: extends DescriptionBundle, includes Description, uses Vocabulary, uses VocabularyBundle
+
+
+
+
+// Rule:
+//     ownedAnnotations+=Annotation*
+//     ('rule' name=ID | 'ref' 'rule' ref=[Rule:ID]) ('['
+//         (antecedent+=Predicate ('&' antecedent+=Predicate)* '->' consequent+=Predicate ('&' consequent+=Predicate)*)?
+
+//     ']')?;
+
+
+Literal:
+	IntegerLiteral |
+	DecimalLiteral |
+	DoubleLiteral |
+	BooleanLiteral |
+	QuotedLiteral;
+
+IntegerLiteral:
+	value=Integer;
+
+DecimalLiteral:
+	value=Decimal;
+
+DoubleLiteral:
+	value=Double;
+
+BooleanLiteral:
+	value=Boolean;
+
+QuotedLiteral:
+	value=STRING (('^^' type=[Scalar:Ref]) | ('$' langTag=ID))?; 
+
+/*
+
+    I'm not sure what the intention of these enums are, but for now I've
+    ported them by replacing them with literals + inference
+
+*/
+
+RangeRestrictionKind returns string:
+	'all' |
+	'some' ;
+
+CardinalityRestrictionKind returns string:
+	'exactly' |
+	'min' |
+	'max';
+
+Extends infers ImportKind:
+	extension = 'extends';
+
+Uses infers ImportKind:
+	usage = 'uses';
+
+Includes infers ImportKind:
+	inclusion = 'includes';
 
 //--------------
 
 Ref returns string: 							 QNAME | ID | IRI;
 
-// terminal CrossRef returns string: 						QNAME | IRI;
+CrossRef returns string: 						QNAME | IRI;
 
-// terminal Boolean returns string:						BOOLEAN_STR;
+Boolean returns string:						BOOLEAN_STR;
 
-// terminal UnsignedInteger returns number: 				UNSIGNED_INTEGER_STR;
+UnsignedInteger returns number: 				UNSIGNED_INTEGER_STR;
 
-// terminal Integer returns number: 						UNSIGNED_INTEGER_STR | INTEGER_STR;
+Integer returns number: 						UNSIGNED_INTEGER_STR | INTEGER_STR;
 
-// terminal Decimal returns number:						DECIMAL_STR;
+terminal Decimal returns number:                		DECIMAL_STR;
 
-// terminal Double returns number:							DOUBLE_STR;
+terminal Double returns number:						    	DOUBLE_STR;
 
 //----------------------------
 
-// terminal BOOLEAN_STR returns boolean:					/(false|true)/;
+terminal BOOLEAN_STR returns boolean:					/(false|true)/;
 
-// terminal UNSIGNED_INTEGER_STR returns number:			NUMERIC+;
+terminal UNSIGNED_INTEGER_STR returns number:			NUMERIC+;
 
-// terminal INTEGER_STR returns number:					('+'|'-')? NUMERIC+;
+terminal INTEGER_STR returns number:					('+'|'-')? NUMERIC+;
 
-// terminal DECIMAL_STR returns number:					('+'|'-')? (NUMERIC+('.'NUMERIC*)? | ('.'NUMERIC+));
+terminal DECIMAL_STR returns number:					('+'|'-')? (NUMERIC+('.'NUMERIC*)? | ('.'NUMERIC+));
 
-// terminal DOUBLE_STR returns number:						('+'|'-')? (NUMERIC+('.'NUMERIC*)? | ('.'NUMERIC+)) ('e'|'E') ('+'|'-')? NUMERIC+;
+terminal DOUBLE_STR returns number:						('+'|'-')? (NUMERIC+('.'NUMERIC*)? | ('.'NUMERIC+)) ('e'|'E') ('+'|'-')? NUMERIC+;
 
-// terminal STRING returns number:							('"' (!('"'|'\\') | '\\'.)* '"') | ("'" (!("'"|'\\') | '\\'.)* "'") | ("'''" -> "'''") | '"""' -> '"""';
+terminal STRING returns string:							('"' (!('"'|'\\') | '\\'.)* '"') | ("'" (!("'"|'\\') | '\\'.)* "'") | ("'''" -> "'''") | '"""' -> '"""';
 
 terminal NAMESPACE returns string:						/<[^# ]*[#/]>/; // /<[^> #]*[#/]>/; // '<' (!('>'|' '|'#'))* ('#'|'/') '>' 
 
