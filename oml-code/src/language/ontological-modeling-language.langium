@@ -8,7 +8,22 @@ Annotation:
     '@' {infer Annotation} property=[AnnotationProperty:Ref] (AnnotationValue ("," AnnotationValue)*)?;
 
 fragment AnnotationValue:
-    literalValues+=Literal /* | referencedValues+=[Member:Ref] */;
+    literalValues+=Literal | referencedValues+=[Member:Ref];
+
+// This rule is needed for AnnotationValue
+Member:
+	Aspect |
+	Concept |
+	RelationEntity |
+	Scalar |
+	AnnotationProperty |
+	ScalarProperty |
+	UnreifiedRelation |
+	BuiltIn |
+	Rule |
+	ConceptInstance |
+	RelationInstance;
+
 
 VocabularyBox:
     Vocabulary |
