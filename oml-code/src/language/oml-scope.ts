@@ -1,11 +1,19 @@
-import { AstNode, AstNodeDescription, DefaultScopeComputation, LangiumDocument } from "langium";
+import { AstNode, AstNodeDescription, AstUtils, DefaultScopeComputation, interruptAndCheck, LangiumDocument, Stream } from "langium";
 import { isOntology, Ontology } from "./generated/ast.js";
 import { CancellationToken } from "vscode-languageserver";
 
 export class OMLScopeComputation extends DefaultScopeComputation {
-    override async computeExports(document: LangiumDocument, cancelToken = CancellationToken.None): Promise<AstNodeDescription[]> {
-        console.log("I am running :)")
-        return [] //this.computeExportsForNode(document.parseResult.value, document, undefined, cancelToken);
+    override async computeExportsForNode(parentNode: AstNode, document: LangiumDocument<AstNode>, children: (root: AstNode) => Iterable<AstNode> = AstUtils.streamContents, cancelToken: CancellationToken = CancellationToken.None): Promise<AstNodeDescription[]> {
+        const directChildren = AstUtils.streamContents
+        const exports: AstNodeDescription[] = [];
+        this.exportNode(parentNode, exports, document);
+        const candidateNodes: Stream<AstNode> = directChildren(parentNode).map((child: AstNode) => [child, directChildren(child)]).flat(2)
+        console.log(candidateNodes.toArray())
+        for (const node of candidateNodes) {
+            await interruptAndCheck(cancelToken);
+            this.exportNode(node, exports, document);
+        }
+        return exports;
     }
 
     protected override exportNode(node: AstNode, exports: AstNodeDescription[], document: LangiumDocument): void {
