@@ -2,16 +2,16 @@ import { afterEach, beforeAll, describe, expect, test } from "vitest";
 import { EmptyFileSystem, type LangiumDocument } from "langium";
 import { expandToString as s } from "langium/generate";
 import { clearDocuments, parseHelper } from "langium/test";
-import { createOntologicalModelingLanguageServices } from "../../src/language/ontological-modeling-language-module.js";
+import { createOmlServices } from "../../src/language/oml-module.js";
 import { Model, isModel } from "../../src/language/generated/ast.js";
 
-let services: ReturnType<typeof createOntologicalModelingLanguageServices>;
+let services: ReturnType<typeof createOmlServices>;
 let parse:    ReturnType<typeof parseHelper<Model>>;
 let document: LangiumDocument<Model> | undefined;
 
 beforeAll(async () => {
-    services = createOntologicalModelingLanguageServices(EmptyFileSystem);
-    parse = parseHelper<Model>(services.OntologicalModelingLanguage);
+    services = createOmlServices(EmptyFileSystem);
+    parse = parseHelper<Model>(services.Oml);
 
     // activate the following if your linking test requires elements from a built-in library, for example
     // await services.shared.workspace.WorkspaceManager.initializeWorkspace([]);

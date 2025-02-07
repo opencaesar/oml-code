@@ -1,5 +1,5 @@
 {
-    "name": "oml-code",
+    "name": "OML-Code",
     "description": "Please enter a brief description here",
     "version": "0.0.1",
     "files": [
@@ -55,7 +55,7 @@
         "node": "18.19.1",
         "npm": "10.2.4"
     },
-    "displayName": "oml-code",
+    "displayName": "OML-Code",
     "engines": {
         "vscode": "^1.67.0",
         "node": ">=18.0.0"
@@ -66,10 +66,10 @@
     "contributes": {
         "languages": [
             {
-                "id": "ontological-modeling-language",
+                "id": "oml",
                 "aliases": [
-                    "Ontological Modeling Language",
-                    "ontological-modeling-language"
+                    "OML",
+                    "oml"
                 ],
                 "extensions": [".oml"],
                 "configuration": "./language-configuration.json"
@@ -77,17 +77,17 @@
         ],
         "grammars": [
             {
-                "language": "ontological-modeling-language",
-                "scopeName": "source.ontological-modeling-language",
-                "path": "syntaxes/ontological-modeling-language.tmLanguage.json"
+                "language": "oml",
+                "scopeName": "source.oml",
+                "path": "syntaxes/oml.tmLanguage.json"
             }
         ]
     },
     "activationEvents": [
-        "onLanguage:ontological-modeling-language"
+        "onLanguage:oml"
     ],
     "main": "./out/extension/main.cjs",
     "bin": {
-        "ontological-modeling-language-cli": "./bin/cli.js"
+        "oml-cli": "./bin/cli.js"
     }
 }

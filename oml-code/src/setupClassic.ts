@@ -1,6 +1,6 @@
 import { MonacoEditorLanguageClientWrapper, UserConfig } from 'monaco-editor-wrapper';
 import { configureWorker, defineUserServices } from './setupCommon.js';
-import monarchSyntax from "./syntaxes/ontological-modeling-language.monarch.js";
+import monarchSyntax from "./syntaxes/oml.monarch.js";
 
 export const setupConfigClassic = (): UserConfig => {
     return {
@@ -8,8 +8,8 @@ export const setupConfigClassic = (): UserConfig => {
             serviceConfig: defineUserServices(),
             editorAppConfig: {
                 $type: 'classic',
-                languageId: 'ontological-modeling-language',
-                code: `// Ontological Modeling Language is running in the web!`,
+                languageId: 'oml',
+                code: `// OML is running in the web!`,
                 useDiffEditor: false,
                 languageExtensionConfig: { id: 'langium' },
                 languageDef: monarchSyntax,

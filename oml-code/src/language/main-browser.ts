@@ -1,7 +1,7 @@
 import { EmptyFileSystem } from 'langium';
 import { startLanguageServer } from 'langium/lsp';
 import { BrowserMessageReader, BrowserMessageWriter, createConnection } from 'vscode-languageserver/browser.js';
-import { createOntologicalModelingLanguageServices } from './ontological-modeling-language-module.js';
+import { createOmlServices } from './oml-module.js';
 
 declare const self: DedicatedWorkerGlobalScope;
 
@@ -10,6 +10,6 @@ const messageWriter = new BrowserMessageWriter(self);
 
 const connection = createConnection(messageReader, messageWriter);
 
-const { shared } = createOntologicalModelingLanguageServices({ connection, ...EmptyFileSystem });
+const { shared } = createOmlServices({ connection, ...EmptyFileSystem });
 
 startLanguageServer(shared);

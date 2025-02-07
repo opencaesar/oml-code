@@ -4,14 +4,14 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "Build ontological-modeling-language",
+            "label": "Build oml",
             "command": "npm run langium:generate && npm run build",
             "type": "shell",
             "group": {
                 "kind": "build",
                 "isDefault": true
             },
-            "detail": "Langium: Generate grammar and build the ontological-modeling-language language",
+            "detail": "Langium: Generate grammar and build the oml language",
             "icon": {
                 "color": "terminal.ansiGreen",
                 "id": "server-process"

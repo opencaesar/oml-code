@@ -1,14 +1,14 @@
 {
-    "projectName": "OntologicalModelingLanguage",
+    "projectName": "Oml",
     "languages": [{
-        "id": "ontological-modeling-language",
-        "grammar": "src/language/ontological-modeling-language.langium",
+        "id": "oml",
+        "grammar": "src/language/oml.langium",
         "fileExtensions": [".oml"],
         "textMate": {
-            "out": "syntaxes/ontological-modeling-language.tmLanguage.json"
+            "out": "syntaxes/oml.tmLanguage.json"
         },
         "monarch": {
-            "out": "src/syntaxes/ontological-modeling-language.monarch.ts"
+            "out": "src/syntaxes/oml.monarch.ts"
         }
     }],
     "out": "src/language/generated"

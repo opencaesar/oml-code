@@ -4,19 +4,19 @@ import { configureWorker, defineUserServices } from './setupCommon.js';
 export const setupConfigExtended = (): UserConfig => {
     const extensionFilesOrContents = new Map();
     extensionFilesOrContents.set('/language-configuration.json', new URL('../language-configuration.json', import.meta.url));
-    extensionFilesOrContents.set('/ontological-modeling-language-grammar.json', new URL('../syntaxes/ontological-modeling-language.tmLanguage.json', import.meta.url));
+    extensionFilesOrContents.set('/oml-grammar.json', new URL('../syntaxes/oml.tmLanguage.json', import.meta.url));
 
     return {
         wrapperConfig: {
             serviceConfig: defineUserServices(),
             editorAppConfig: {
                 $type: 'extended',
-                languageId: 'ontological-modeling-language',
-                code: `// Ontological Modeling Language is running in the web!`,
+                languageId: 'oml',
+                code: `// OML is running in the web!`,
                 useDiffEditor: false,
                 extensions: [{
                     config: {
-                        name: 'ontological-modeling-language-web',
+                        name: 'oml-web',
                         publisher: 'generator-langium',
                         version: '1.0.0',
                         engines: {
@@ -24,16 +24,16 @@ export const setupConfigExtended = (): UserConfig => {
                         },
                         contributes: {
                             languages: [{
-                                id: 'ontological-modeling-language',
+                                id: 'oml',
                                 extensions: [
-                                    '.ontological-modeling-language'
+                                    '.oml'
                                 ],
                                 configuration: './language-configuration.json'
                             }],
                             grammars: [{
-                                language: 'ontological-modeling-language',
-                                scopeName: 'source.ontological-modeling-language',
-                                path: './ontological-modeling-language-grammar.json'
+                                language: 'oml',
+                                scopeName: 'source.oml',
+                                path: './oml-grammar.json'
                             }]
                         }
                     },

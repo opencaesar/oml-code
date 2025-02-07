@@ -1,4 +1,4 @@
-grammar OntologicalModelingLanguage
+grammar OML
 
 entry Ontology:
     VocabularyBox

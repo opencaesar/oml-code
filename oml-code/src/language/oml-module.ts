@@ -1,15 +1,15 @@
 import { type Module, inject } from 'langium';
 import { createDefaultModule, createDefaultSharedModule, type DefaultSharedModuleContext, type LangiumServices, type LangiumSharedServices, type PartialLangiumServices } from 'langium/lsp';
-import { OntologicalModelingLanguageGeneratedModule, OntologicalModelingLanguageGeneratedSharedModule } from './generated/module.js';
-import { OntologicalModelingLanguageValidator, registerValidationChecks } from './ontological-modeling-language-validator.js';
-import { OMLScopeComputation } from './ontological-modeling-language-scope.js';
+import { OMLGeneratedModule, OmlGeneratedSharedModule } from './generated/module.js';
+import { OmlValidator, registerValidationChecks } from './oml-validator.js';
+import { OMLScopeComputation } from './oml-scope.js';
 
 /**
  * Declaration of custom services - add your own service classes here.
  */
-export type OntologicalModelingLanguageAddedServices = {
+export type OmlAddedServices = {
     validation: {
-        OntologicalModelingLanguageValidator: OntologicalModelingLanguageValidator
+        OmlValidator: OmlValidator
     }
 }
 
@@ -17,19 +17,19 @@ export type OntologicalModelingLanguageAddedServices = {
  * Union of Langium default services and your custom services - use this as constructor parameter
  * of custom service classes.
  */
-export type OntologicalModelingLanguageServices = LangiumServices & OntologicalModelingLanguageAddedServices
+export type OmlServices = LangiumServices & OmlAddedServices
 
 /**
  * Dependency injection module that overrides Langium default services and contributes the
  * declared custom services. The Langium defaults can be partially specified to override only
  * selected services, while the custom services must be fully specified.
  */
-export const OntologicalModelingLanguageModule: Module<OntologicalModelingLanguageServices, PartialLangiumServices & OntologicalModelingLanguageAddedServices> = {
+export const OmlModule: Module<OmlServices, PartialLangiumServices & OmlAddedServices> = {
     validation: {
-        OntologicalModelingLanguageValidator: () => new OntologicalModelingLanguageValidator()
+        OmlValidator: () => new OmlValidator()
     },
     references: {
-        ScopeComputation: (services) => new OMLScopeComputation(services),
+        ScopeComputation: (services) => new OMLScopeComputation(services)
     }
 };
 
@@ -48,25 +48,25 @@ export const OntologicalModelingLanguageModule: Module<OntologicalModelingLangua
  * @param context Optional module context with the LSP connection
  * @returns An object wrapping the shared services and the language-specific services
  */
-export function createOntologicalModelingLanguageServices(context: DefaultSharedModuleContext): {
+export function createOmlServices(context: DefaultSharedModuleContext): {
     shared: LangiumSharedServices,
-    OntologicalModelingLanguage: OntologicalModelingLanguageServices
+    Oml: OmlServices
 } {
     const shared = inject(
         createDefaultSharedModule(context),
-        OntologicalModelingLanguageGeneratedSharedModule
+        OmlGeneratedSharedModule
     );
-    const OntologicalModelingLanguage = inject(
+    const Oml = inject(
         createDefaultModule({ shared }),
-        OntologicalModelingLanguageGeneratedModule,
-        OntologicalModelingLanguageModule
+        OMLGeneratedModule,
+        OmlModule
     );
-    shared.ServiceRegistry.register(OntologicalModelingLanguage);
-    registerValidationChecks(OntologicalModelingLanguage);
+    shared.ServiceRegistry.register(Oml);
+    registerValidationChecks(Oml);
     if (!context.connection) {
         // We don't run inside a language server
         // Therefore, initialize the configuration provider instantly
         shared.workspace.ConfigurationProvider.initialized({});
     }
-    return { shared, OntologicalModelingLanguage };
+    return { shared, Oml };
 }
