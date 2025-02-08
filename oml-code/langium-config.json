@@ -4,9 +4,6 @@
         "id": "oml",
         "grammar": "src/language/oml.langium",
         "fileExtensions": [".oml"],
-        "textMate": {
-            "out": "syntaxes/oml.tmLanguage.json"
-        },
         "monarch": {
             "out": "src/syntaxes/oml.monarch.ts"
         }
