@@ -1,5 +1,5 @@
-import { AstNode, AstNodeDescription, AstUtils, DefaultScopeComputation, interruptAndCheck, LangiumDocument, Stream } from "langium";
-import { isOntology, Ontology } from "./generated/ast.js";
+import { AstNode, AstNodeDescription, AstUtils, DefaultScopeComputation, DefaultScopeProvider, interruptAndCheck, LangiumDocument, ReferenceInfo, Scope, Stream } from "langium";
+import { isImport, isOntology, OmlTerminals, Ontology } from "./generated/ast.js";
 import { CancellationToken } from "vscode-languageserver";
 
 export class OMLScopeComputation extends DefaultScopeComputation {
@@ -34,5 +34,63 @@ export class OMLScopeComputation extends DefaultScopeComputation {
     // Should only be used with terms original to the given document
     private createIRI = (memberName: string, ontologyNamespace: string): string =>  {
         return ontologyNamespace.substring(0, ontologyNamespace.length - 1) + memberName + '>'
+    }
+}
+
+type ParsedIRI = {
+    namespace: string,
+    memberID?: string
+}
+
+export class OMLScopeProvider extends DefaultScopeProvider {
+    override getScope(context: ReferenceInfo): Scope {
+        if (isImport(context.container))
+            return super.getScope(context)
+        const document = AstUtils.getDocument(context.container).parseResult.value as Ontology
+        const importedOntologyNamespaceToPrefix: Map<string, string|null> = new Map()
+        document.ownedImports.forEach((i) => {
+            importedOntologyNamespaceToPrefix.set(i.imported.$refText, i.prefix ? i.prefix : null)
+        })
+        
+        return this.createScope(super.getScope(context).getAllElements()
+            .filter((desc) => this.isLocalMember(desc) || this.isMemberFromImportedOntology(importedOntologyNamespaceToPrefix, desc.name))
+            .map(desc => {
+                const parsedIRI = this.parseFullIRI(desc.name)
+                return !this.isMemberFromImportedOntology(importedOntologyNamespaceToPrefix, desc.name) ? desc : [desc, {
+                ...desc,
+                name: this.getAbbreviatedIRI(parsedIRI.memberID!, importedOntologyNamespaceToPrefix.get(parsedIRI.namespace)!)
+            }]}).flat()
+        )
+    }
+
+    private isMemberFromImportedOntology = (importedOntologyNamespaces: Set<string> | Map<string, any>, IRI: string): boolean => {
+        const { namespace } = this.parseFullIRI(IRI)
+        const ret =  importedOntologyNamespaces.has(namespace)
+        // console.log(`${IRI} ${ret ? 'is': 'is not'} a member from one of our imported ontologies: ${importedOntologyNamespaces}`)
+        return ret
+    }
+        
+    private isLocalMember = (member: AstNodeDescription): boolean => {
+        const ret = !OmlTerminals.IRI.test(member.name)
+        // console.log(`is ${member.name} a local member? ${ret}`)
+        return ret
+    }
+
+    private getAbbreviatedIRI = (memberID: string, prefix: string): string => {
+        return prefix + ':' + memberID
+    }
+
+    
+    private parseFullIRI = (fullIRI: string): ParsedIRI => {
+        // Remove trailing separator and add ending bracket
+        const sepIndex = fullIRI.lastIndexOf('#') != -1 ? fullIRI.lastIndexOf('#') : fullIRI.lastIndexOf('/')
+        const namespace = fullIRI.substring(0, sepIndex + 1) + '>'
+        if (fullIRI[sepIndex] !== '>') {
+            const memberID = fullIRI.substring(sepIndex + 1, fullIRI.length - 1)
+            return { namespace, memberID }
+        }
+        else {
+            return { namespace }
+        } 
     }
 }
