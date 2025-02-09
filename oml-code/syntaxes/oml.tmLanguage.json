@@ -6,25 +6,31 @@
   ],
   "patterns": [
     {
-      "name": "namespace.oml",
-      "match": "https?://[^\\s]+"
+      "name": "entity.name.section.oml",
+      "match": "<https?://[^\\s]+>"
     },
     {
       "include": "#comments"
     },
     {
-      "name": "keyword.control.oml",
-      "match": "\\b(all|annotation|as|aspect|asymmetric|builtIn|builtin|bundle|concept|description|differentFrom|domain|entity|exactly|extends|forward|from|functional|includes|instance|inverse|irreflexive|key|language|length|max|maxExclusive|maxInclusive|maxLength|min|minExclusive|minInclusive|minLength|oneOf|pattern|property|range|ref|reflexive|relation|restricts|reverse|rule|sameAs|scalar|self|some|symmetric|to|transitive|uses|vocabulary)\\b"
+      "match": "\\b(all|annotation|as|aspect|asymmetric|builtIn|builtin|bundle|concept|description|differentFrom|domain|entity|exactly|extends|forward|from|functional|includes|instance|inverse|irreflexive|key|language|length|max|maxExclusive|maxInclusive|maxLength|min|minExclusive|minInclusive|minLength|oneOf|pattern|property|range|ref|reflexive|relation|restricts|reverse|rule|sameAs|scalar|self|some|symmetric|to|transitive|uses|vocabulary)\\b",
+      "name": "keyword.control.oml"
     },
-
-
     {
-      "name": "string.quoted.single.single.oml",
+      "match": "(\\s+\\b(aspect|concept|relation\\bentity|scalar|annotation\\bproperty|scalar\\bproperty|forward|reverse|relation|rule|builtin|instance|relation\\binstance)\\b",
+      "captures": {
+        "10": {
+          "name": "comment.block.oml"
+        }
+      }
+    },
+    {
+      "name": "string.quoted.single.oml",
       "begin:": "'",
       "end": "'"
     },
     {
-      "name": "string.quoted.single.double.oml",
+      "name": "string.quoted.double.oml",
       "begin": "\"",
       "end": "\"",
       "patterns": [
@@ -34,12 +40,12 @@
       ]
     },
     {
-      "name": "string.quoted.triple.single.oml",
+      "name": "string.quoted.triple.oml",
       "begin": "'''",
       "end": "'''"
     },
     {
-      "name": "string.quoted.triple.double.oml",
+      "name": "string.quoted.triple.oml",
       "begin": "\"\"\"",
       "end": "\"\"\""
     }
