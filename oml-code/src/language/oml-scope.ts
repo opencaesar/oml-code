@@ -56,10 +56,21 @@ export class OMLScopeProvider extends DefaultScopeProvider {
             .filter((desc) => this.isLocalMember(desc) || this.isMemberFromImportedOntology(importedOntologyNamespaceToPrefix, desc.name))
             .map(desc => {
                 const parsedIRI = this.parseFullIRI(desc.name)
-                return !this.isMemberFromImportedOntology(importedOntologyNamespaceToPrefix, desc.name) ? desc : [desc, {
-                ...desc,
-                name: this.getAbbreviatedIRI(parsedIRI.memberID!, importedOntologyNamespaceToPrefix.get(parsedIRI.namespace)!)
-            }]}).flat()
+                return !this.isMemberFromImportedOntology(importedOntologyNamespaceToPrefix, desc.name) ? 
+                    [
+                        desc, 
+                        {...desc, name: this.getAbbreviatedIRI(desc.name, document.prefix)}
+                    ]
+                : 
+                    [
+                        desc, 
+                        {
+                            ...desc,
+                            name: this.getAbbreviatedIRI(parsedIRI.memberID!, importedOntologyNamespaceToPrefix.get(parsedIRI.namespace)!)
+                        }
+                    ]
+                }
+            ).flat()
         )
     }
 
