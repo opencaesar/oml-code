@@ -339,10 +339,10 @@ InstanceEnumerationAxiom:
 LiteralEnumerationAxiom:
 	'oneOf' literals+=Literal (',' literals+=Literal)*;
 
-ConceptTypeAssertion infers TypeAssertion:
+ConceptTypeAssertion:
 	type=[Concept:Ref];
 
-RelationTypeAssertion infers TypeAssertion:
+RelationTypeAssertion:
 	type=[RelationEntity:Ref];
 
 PropertyValueAssertion:
