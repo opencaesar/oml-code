@@ -301,13 +301,13 @@ Import:
     Inclusion;
 
 Extension infers Import:
-    kind=Extends imported=[Vocabulary:NAMESPACE] ('as' prefix=ID)?;
+    kind=Extends imported=[Ontology:NAMESPACE] ('as' prefix=ID)?;
 
 Usage infers Import:
-    kind=Uses imported=[Vocabulary:NAMESPACE] ('as' prefix=ID)?;
+    kind=Uses imported=[Ontology:NAMESPACE] ('as' prefix=ID)?;
 
 Inclusion infers Import:
-    kind=Includes imported=[Vocabulary:NAMESPACE] ('as' prefix=ID)?;
+    kind=Includes imported=[Ontology:NAMESPACE] ('as' prefix=ID)?;
 
 SpecializationAxiom:
 	superTerm=[SpecializableTerm:Ref];
