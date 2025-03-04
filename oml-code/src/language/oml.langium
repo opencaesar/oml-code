@@ -10,20 +10,81 @@ Annotation:
 fragment AnnotationValue:
     literalValues+=Literal | referencedValues+=[Member:Ref];
 
-// This rule is needed for AnnotationValue
-Member:
-	Aspect |
-	Concept |
-	RelationEntity |
-	Scalar |
-	AnnotationProperty |
-	ScalarProperty |
-	UnreifiedRelation |
-	BuiltIn |
-	Rule |
-	ConceptInstance |
-	RelationInstance;
+Element:
+	Annotation |
+	Argument |
+	Assertion |
+	Axiom |
+	IdentifiedElement |
+	Import |
+	Instance |
+	Literal |
+	Predicate;
 
+Assertion:
+	PropertyValueAssertion
+	TypeAssertion;
+
+TypeAssertion:
+	type=[Entity:Ref];
+
+Axiom:
+	KeyAxiom |
+	PropertyRestrictionAxiom |
+	EntityEquivalenceAxiom |
+	PropertyEquivalenceAxiom |
+	ScalarEquivalenceAxiom |
+	InstanceEnumerationAxiom |
+	LiteralEnumerationAxiom |
+	SpecializationAxiom;
+
+IdentifiedElement:
+	Member |
+	Ontology;
+
+Instance:
+	AnonymousInstance |
+	NamedInstance;
+
+Member:
+	VocabularyMember |
+	DescriptionMember |
+	Statement;
+
+VocabularyMember:
+	Term |
+	VocabularyStatement;
+
+DescriptionMember:
+	DescriptionStatement;
+
+Statement:
+	VocabularyStatement |
+	DescriptionStatement;
+
+Term:
+	Property |
+	SpecializableTerm;
+
+Property:
+	AnnotationProperty |
+	SemanticProperty;
+
+SemanticProperty:
+	ScalarProperty |
+	Relation;
+
+Relation:
+	ForwardRelation |
+	ReverseRelation |
+	UnreifiedRelation;
+
+Import:
+    Extension |
+    Usage |
+    Inclusion;
+
+// This rule is needed for AnnotationValue
 
 VocabularyBox:
     Vocabulary |
@@ -61,13 +122,21 @@ DescriptionBundle:
 
 SpecializableTerm:
     Type |
-    AnnotationProperty |
-    ScalarProperty |
-    UnreifiedRelation;
+	SpecializableProperty |
+	RelationBase;
 
 Type:
     Entity |
     Scalar;
+
+SpecializableProperty:
+	AnnotationProperty |
+    ScalarProperty |
+    UnreifiedRelation;
+
+RelationBase:
+	RelationEntity |
+	UnreifiedRelation;
 
 Entity:
     Aspect |
@@ -182,19 +251,10 @@ ScalarEquivalenceAxiom:
 		 ('maxExclusive' maxExclusive+=Literal))*
 	']')?;
 
-Property:
-	AnnotationProperty |
-	SemanticProperty;
-
 AnnotationProperty:
 	ownedAnnotations+=Annotation*
 	(('annotation' 'property' name=ID) | ('ref' 'annotation' 'property' ref=[AnnotationProperty:Ref]))
 	    (PropertySpecialization)? (PropertyEquivalence)?;
-
-
-SemanticProperty:
-	ScalarProperty |
-	Relation;
 
 ScalarProperty:
 	ownedAnnotations+=Annotation*
@@ -203,11 +263,6 @@ ScalarProperty:
 		('range' ranges+=[Scalar:Ref] (',' ranges+=[Scalar:Ref])*)?
 		(functional?='functional')?
 	']')? (PropertySpecialization)? (PropertyEquivalence)?;
-
-Relation:
-	ForwardRelation |
-	ReverseRelation |
-	UnreifiedRelation;
 
 ForwardRelation:
 	ownedAnnotations+=Annotation*
@@ -275,13 +330,13 @@ NamedInstance:
 
 ConceptInstance:
 	ownedAnnotations+=Annotation*
-	('instance' name=ID | 'ref' 'instance' ref=[ConceptInstance:Ref]) (':' ownedTypes+=ConceptTypeAssertion (',' ownedTypes+=ConceptTypeAssertion)*)? ('['
+	('instance' name=ID | 'ref' 'instance' ref=[ConceptInstance:Ref]) (':' ownedTypes+=TypeAssertion (',' ownedTypes+=TypeAssertion)*)? ('['
 		ownedPropertyValues+=PropertyValueAssertion*
 	']')?;
 	
 RelationInstance:
 	ownedAnnotations+=Annotation*
-	('relation' 'instance' name=ID | 'ref' 'relation' 'instance' ref=[RelationInstance:Ref]) (':' ownedTypes+=RelationTypeAssertion (',' ownedTypes+=RelationTypeAssertion)*)? ('['
+	('relation' 'instance' name=ID | 'ref' 'relation' 'instance' ref=[RelationInstance:Ref]) (':' ownedTypes+=TypeAssertion (',' ownedTypes+=TypeAssertion)*)? ('['
 		('from' sources+=[NamedInstance:Ref] (',' sources+=[NamedInstance:Ref])*)? 
 		('to' targets+=[NamedInstance:Ref] (',' targets+=[NamedInstance:Ref])*)?
 		ownedPropertyValues+=PropertyValueAssertion*
@@ -294,11 +349,6 @@ VocabularyStatement:
 
 DescriptionStatement:
 	NamedInstance;
-
-Import:
-    Extension |
-    Usage |
-    Inclusion;
 
 Extension infers Import:
     kind=Extends imported=[Ontology:NAMESPACE] ('as' prefix=ID)?;
@@ -338,12 +388,6 @@ InstanceEnumerationAxiom:
 
 LiteralEnumerationAxiom:
 	'oneOf' literals+=Literal (',' literals+=Literal)*;
-
-ConceptTypeAssertion:
-	type=[Concept:Ref];
-
-RelationTypeAssertion:
-	type=[RelationEntity:Ref];
 
 PropertyValueAssertion:
 	property=[SemanticProperty:Ref] PropertyValue ("," PropertyValue)*;
