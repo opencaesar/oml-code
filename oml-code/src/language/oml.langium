@@ -122,8 +122,7 @@ DescriptionBundle:
 
 SpecializableTerm:
     Type |
-	SpecializableProperty |
-	RelationBase;
+	SpecializableProperty;
 
 Type:
     Entity |
