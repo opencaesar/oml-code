@@ -3,6 +3,7 @@ import { createDefaultModule, createDefaultSharedModule, type DefaultSharedModul
 import { OMLGeneratedModule, OmlGeneratedSharedModule } from './generated/module.js';
 import { OmlValidator, registerValidationChecks } from './oml-validator.js';
 import { OMLScopeComputation, OMLScopeProvider } from './oml-scope.js';
+import { OmlValueConverter } from './oml-converter.js';
 
 /**
  * Declaration of custom services - add your own service classes here.
@@ -25,6 +26,9 @@ export type OmlServices = LangiumServices & OmlAddedServices
  * selected services, while the custom services must be fully specified.
  */
 export const OmlModule: Module<OmlServices, PartialLangiumServices & OmlAddedServices> = {
+    parser: {
+        ValueConverter: () => new OmlValueConverter()
+    },
     validation: {
         OmlValidator: () => new OmlValidator()
     },

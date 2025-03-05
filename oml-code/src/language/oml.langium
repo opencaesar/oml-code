@@ -527,25 +527,23 @@ terminal Double returns number:						    	DOUBLE_STR;
 
 terminal BOOLEAN_STR returns boolean:					/(false|true)/;
 
-terminal UNSIGNED_INTEGER_STR returns number:			NUMERIC+;
+terminal UNSIGNED_INTEGER_STR:							NUMERIC+;
 
-terminal INTEGER_STR returns number:					('+'|'-')? NUMERIC+;
+terminal INTEGER_STR:									('+'|'-')? NUMERIC+;
 
-terminal DECIMAL_STR returns number:					('+'|'-')? (NUMERIC+('.'NUMERIC*)? | ('.'NUMERIC+));
+terminal DECIMAL_STR:									('+'|'-')? (NUMERIC+('.'NUMERIC*)? | ('.'NUMERIC+));
 
-terminal DOUBLE_STR returns number:						('+'|'-')? (NUMERIC+('.'NUMERIC*)? | ('.'NUMERIC+)) ('e'|'E') ('+'|'-')? NUMERIC+;
+terminal DOUBLE_STR:									('+'|'-')? (NUMERIC+('.'NUMERIC*)? | ('.'NUMERIC+)) ('e'|'E') ('+'|'-')? NUMERIC+;
 
-terminal STRING returns string:                         ('"""' -> '"""') | ("'''" -> "'''") | ("'" -> "'") | ('"' -> '"');
+terminal STRING:				                         ('"""' -> '"""') | ("'''" -> "'''") | ("'" -> "'") | ('"' -> '"');
 
-// terminal STRING returns string:							('"' (!('"'|'\\') | '\\'.)* '"') | ("'" (!("'"|'\\') | '\\'.)* "'") | ("'''" -> "'''") | '"""' -> '"""';
+terminal NAMESPACE:										/<[^# ]*[#/]>/; // /<[^> #]*[#/]>/; // '<' (!('>'|' '|'#'))* ('#'|'/') '>' 
 
-terminal NAMESPACE returns string:						/<[^# ]*[#/]>/; // /<[^> #]*[#/]>/; // '<' (!('>'|' '|'#'))* ('#'|'/') '>' 
+terminal IRI:											/<[^ ]*>/; // '<' (!('>'|' '))* '>'
 
-terminal IRI returns string:							/<[^ ]*>/; // '<' (!('>'|' '))* '>'
+terminal QNAME:											IDFRAG ':' IDFRAG;
 
-terminal QNAME returns string:							ID ':' ID;
-
-terminal ID returns string:								IDFRAG;
+terminal ID:											IDFRAG;
 
 hidden terminal ML_COMMENT: 							/\/\*[\s\S]*?\*\//;
  
