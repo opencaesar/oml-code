@@ -60,7 +60,7 @@ export class OmlValidator {
             if (!ownedImport.imported.ref) {
                 return
             }
-            if (ownedImport.kind.extension) {
+            if (ownedImport.kind == 'extends') {
                 if (ownedImport.imported.ref.$type === ontology.$type) {
                     return
                 } else {
@@ -73,7 +73,7 @@ export class OmlValidator {
             }
             
             if (isVocabulary(ontology)) {
-                if (!ownedImport.kind.usage) {
+                if (ownedImport.kind != 'uses') {
                     accept(
                         'error',
                         'Vocabularies can extend other Vocabularies and use Descriptions',
@@ -87,9 +87,7 @@ export class OmlValidator {
                     )
                 }
             } else if (isVocabularyBundle(ontology)) {
-                if (
-                    !ownedImport.kind.inclusion
-                ) {
+                if (ownedImport.kind != 'includes') {
                     accept(
                         'error',
                         'Vocabulary Bundles can extend other Vocabulary Bundles and include Vocabularies',
@@ -103,9 +101,7 @@ export class OmlValidator {
                     )
                 }
             } else if (isDescription(ontology)) {
-                if (
-                    !ownedImport.kind.usage
-                ) {
+                if (ownedImport.kind != 'uses') {
                     accept(
                         'error',
                         'Descriptions can extend other Descriptions and use Vocabularies',
@@ -119,7 +115,7 @@ export class OmlValidator {
                     )
                 }
             } else if (isDescriptionBundle(ontology)) {
-                if (ownedImport.kind.inclusion) {
+                if (ownedImport.kind == 'includes') {
                     if (!isDescription(ownedImport.imported.ref)) {
                         accept(
                             'error',
@@ -127,7 +123,7 @@ export class OmlValidator {
                             {node: ownedImport}
                         )
                     }
-                } else if (ownedImport.kind.usage) {
+                } else if (ownedImport.kind == 'uses') {
                     if (!isVocabulary(ownedImport.imported.ref) && !isVocabularyBundle(ownedImport.imported.ref)) {
                         accept(
                             'error',

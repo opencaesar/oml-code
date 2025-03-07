@@ -7,6 +7,8 @@ export class OmlValueConverter extends DefaultValueConverter {
             // 'convertString' simply removes the first and last character of the input
             return input.substring(1, input.length-1)
             //return super.runConverter(rule, input, cstNode);
+        } if (rule.name == 'ID' || rule.name == 'QNAME') {
+            return input.replaceAll('^', '')
         } else {
             return super.runConverter(rule, input, cstNode);
         }

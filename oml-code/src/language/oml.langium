@@ -79,13 +79,6 @@ Relation:
 	ReverseRelation |
 	UnreifiedRelation;
 
-Import:
-    Extension |
-    Usage |
-    Inclusion;
-
-// This rule is needed for AnnotationValue
-
 VocabularyBox:
     Vocabulary |
     VocabularyBundle;
@@ -208,35 +201,6 @@ fragment ScalarSpecialization infers Scalar:
 fragment ScalarEquivalence infers Scalar:
 	'=' ownedEquivalences+=ScalarEquivalenceAxiom (',' ownedEquivalences+=ScalarEquivalenceAxiom)*;
 
-/*
-
-ScalarEquivalenceAxiom:
-	superScalar=[Scalar:Ref] ('['
-		(('length' length=UnsignedInteger)? &
-		 ('minLength' minLength=UnsignedInteger)? &
-		 ('maxLength' maxLength=UnsignedInteger)? &
-		 ('pattern' pattern=STRING)? &
-		 ('language' language=ID)? &
-		 ('minInclusive' minInclusive=Literal)? &
-		 ('minExclusive' minExclusive=Literal)? &
-		 ('maxInclusive' maxInclusive=Literal)? &
-		 ('maxExclusive' maxExclusive=Literal)?)
-	']')?;
-
-* * * * * * * * * *
-
-    Because optional elements in unordered groups are unsupported, I don't see
-    how to port this rule while retaining its original behavior.
-    My main idea for how to replicate similar behavior to the original is using
-    the following rule in conjunction with a validation rule that doesn't
-    allow you to populate a field multiple times.
-    Additionally, because fields like 'length' may be populated multiple times,
-    only grab the first value if one is present
-
-* * * * * * * * * *
-
-*/
-
 ScalarEquivalenceAxiom:
 	superScalar=[Scalar:Ref] ('['
 		(('length' length+=UnsignedInteger) |
@@ -288,7 +252,6 @@ UnreifiedRelation:
             (transitive?='transitive')
         )
 	']')? (PropertySpecialization)? (PropertyEquivalence)?;
-
 
 fragment PropertySpecialization infers SpecializableProperty:
 	'<' ownedSpecializations+=SpecializationAxiom (',' ownedSpecializations+=SpecializationAxiom)*;
@@ -349,17 +312,20 @@ VocabularyStatement:
 DescriptionStatement:
 	NamedInstance;
 
+Import:
+    kind=ImportKind imported=[Ontology:NAMESPACE] ('as' prefix=ID)?;
+
 Extension infers Import:
-    kind=Extends imported=[Ontology:NAMESPACE] ('as' prefix=ID)?;
+    kind='extends' imported=[Ontology:NAMESPACE] ('as' prefix=ID)?;
 
 Usage infers Import:
-    kind=Uses imported=[Ontology:NAMESPACE] ('as' prefix=ID)?;
+    kind='uses' imported=[Ontology:NAMESPACE] ('as' prefix=ID)?;
 
 Inclusion infers Import:
-    kind=Includes imported=[Ontology:NAMESPACE] ('as' prefix=ID)?;
+    kind='includes' imported=[Ontology:NAMESPACE] ('as' prefix=ID)?;
 
 SpecializationAxiom:
-	superTerm=[SpecializableTerm:Ref];
+	superTerm=[Term:Ref];
 
 PropertyRestrictionAxiom:
 	PropertySelfRestrictionAxiom |
@@ -368,7 +334,7 @@ PropertyRestrictionAxiom:
 	PropertyValueRestrictionAxiom;
 
 PropertyRangeRestrictionAxiom:
-	'restricts' kind=(RangeRestrictionKind) property=[SemanticProperty:Ref] 'to' range=[Type:Ref];
+	'restricts' kind=RangeRestrictionKind property=[SemanticProperty:Ref] 'to' range=[Type:Ref];
 
 PropertyCardinalityRestrictionAxiom:
 	'restricts' property=[SemanticProperty:Ref] 'to' kind=CardinalityRestrictionKind cardinality=UnsignedInteger (range=[Type:Ref])?;
@@ -429,37 +395,6 @@ BuiltInPredicate:
 Argument:
 	variable=ID | literal=Literal | instance=[NamedInstance:CrossRef];
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-// TODO: Implement specific import rules as defined by the spec:
-// OML supports several kinds of imports for each one of its ontology kinds:
-// * Vocabulary: extends Vocabulary, uses Description
-// * Vocabulary Bundle: extends VocabularyBundle, includes Vocabulary
-// * Description: extends Description, uses Vocabulary
-// * Description Bundle: extends DescriptionBundle, includes Description, uses Vocabulary, uses VocabularyBundle
-
-
-
-
-// Rule:
-//     ownedAnnotations+=Annotation*
-//     ('rule' name=ID | 'ref' 'rule' ref=[Rule:ID]) ('['
-//         (antecedent+=Predicate ('&' antecedent+=Predicate)* '->' consequent+=Predicate ('&' consequent+=Predicate)*)?
-
-//     ']')?;
-
-
 Literal:
 	IntegerLiteral |
 	DecimalLiteral |
@@ -482,13 +417,6 @@ BooleanLiteral:
 QuotedLiteral:
 	value=STRING (('^^' type=[Scalar:Ref]) | ('$' langTag=ID))?; 
 
-/*
-
-    I'm not sure what the intention of these enums are, but for now I've
-    ported them by replacing them with literals + inference
-
-*/
-
 RangeRestrictionKind returns string:
 	'all' |
 	'some' ;
@@ -498,58 +426,56 @@ CardinalityRestrictionKind returns string:
 	'min' |
 	'max';
 
-Extends infers ImportKind:
-	extension = 'extends';
-
-Uses infers ImportKind:
-	usage = 'uses';
-
-Includes infers ImportKind:
-	inclusion = 'includes';
+ImportKind returns string:
+	'extends' |
+	'uses' |
+	'includes';
 
 //--------------
 
-Ref returns string: 							 QNAME | ID | IRI;
+Ref returns string: 							 		QNAME | ID | IRI;
 
-CrossRef returns string: 						QNAME | IRI;
+CrossRef returns string: 								QNAME | IRI;
 
-Boolean returns string:						BOOLEAN_STR;
+Boolean returns boolean:								BOOLEAN;
 
-UnsignedInteger returns number: 				UNSIGNED_INTEGER_STR;
+UnsignedInteger returns number: 						UNSIGNED_INTEGER;
 
-Integer returns number: 						UNSIGNED_INTEGER_STR | INTEGER_STR;
+Integer returns number: 								UNSIGNED_INTEGER | INTEGER;
 
-terminal Decimal returns number:                		DECIMAL_STR;
+Decimal returns number:									DECIMAL;
 
-terminal Double returns number:						    	DOUBLE_STR;
+Double returns number:									DOUBLE;
 
 //----------------------------
-
-terminal BOOLEAN_STR returns boolean:					/(false|true)/;
-
-terminal UNSIGNED_INTEGER_STR:							NUMERIC+;
-
-terminal INTEGER_STR:									('+'|'-')? NUMERIC+;
-
-terminal DECIMAL_STR:									('+'|'-')? (NUMERIC+('.'NUMERIC*)? | ('.'NUMERIC+));
-
-terminal DOUBLE_STR:									('+'|'-')? (NUMERIC+('.'NUMERIC*)? | ('.'NUMERIC+)) ('e'|'E') ('+'|'-')? NUMERIC+;
-
-terminal STRING:				                         ('"""' -> '"""') | ("'''" -> "'''") | ("'" -> "'") | ('"' -> '"');
-
-terminal NAMESPACE:										/<[^# ]*[#/]>/; // /<[^> #]*[#/]>/; // '<' (!('>'|' '|'#'))* ('#'|'/') '>' 
-
-terminal IRI:											/<[^ ]*>/; // '<' (!('>'|' '))* '>'
-
-terminal QNAME:											IDFRAG ':' IDFRAG;
-
-terminal ID:											IDFRAG;
 
 hidden terminal ML_COMMENT: 							/\/\*[\s\S]*?\*\//;
  
 hidden terminal SL_COMMENT:                             /\/\/[^\n\r]*/;
  
 hidden terminal WS:                                     /\s+/;
+
+//----------------------------
+
+terminal BOOLEAN:										/(false|true)/;
+
+terminal DOUBLE:										('+'|'-')? (NUMERIC+('.'NUMERIC*)? | ('.'NUMERIC+)) ('e'|'E') ('+'|'-')? NUMERIC+;
+
+terminal DECIMAL:										('+'|'-')? (NUMERIC+('.'NUMERIC*)) | ('.'NUMERIC+);
+
+terminal INTEGER:										('+'|'-') NUMERIC+;
+
+terminal UNSIGNED_INTEGER:								NUMERIC+;
+
+terminal STRING:				                         ('"""' -> '"""') | ("'''" -> "'''") | ("'" -> "'") | ('"' -> '"');
+
+terminal NAMESPACE:										/<[^# ]*[#/]>/;
+
+terminal IRI:											/<[^ ]*>/;
+
+terminal QNAME:											IDFRAG ':' IDFRAG;
+
+terminal ID:											IDFRAG;
 
 //----------------------------
 
