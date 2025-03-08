@@ -60,7 +60,7 @@ export class OMLScopeProvider extends DefaultScopeProvider {
         })
         
         // get the reference type
-        const referenceType = this.reflection.getReferenceType(context);
+        const referenceType = this.getReferenceType(context);
 
         //get all possible descriptions from these ontologies
         const allDescriptions = this.indexManager.allElements(referenceType, uris).toArray();
@@ -74,7 +74,7 @@ export class OMLScopeProvider extends DefaultScopeProvider {
             //TODO: without next line, resolving links does not work (not sure why)
             candidateDescriptions.add(i);
             // add full iri version
-            candidateDescriptions.add({...i, name:'<'+namespace+name+'>'});
+            //candidateDescriptions.add({...i, name:'<'+namespace+name+'>'});
             // add abbrev iri version
             candidateDescriptions.add({...i, name:prefix+':'+name});
             // add name version if local ref
@@ -94,6 +94,23 @@ export class OMLScopeProvider extends DefaultScopeProvider {
             i = iri.lastIndexOf('/')
         }
         return [iri.substring(0, i+1), iri.substring(i+1, iri.length)]
+    }
+
+    getReferenceType(context: ReferenceInfo) : string {
+        const referenceId = `${context.container.$type}:${context.property}`;
+        if (referenceId == 'SpecializationAxiom:superTerm') {
+            if (context.container.$container) {
+                const type = context.container.$container.$type
+                if (type == 'Concept' || type == 'RelationEntity') {
+                    return 'Entity'
+                } if (type.endsWith('Relation')) {
+                    return 'Relation'
+                } else {
+                    return type
+                }
+            }
+        }
+        return this.reflection.getReferenceType(context);
     }
 
 }
