@@ -1,94 +1,99 @@
-import { AstNode, AstNodeDescription, AstUtils, DefaultScopeComputation, DefaultScopeProvider, interruptAndCheck, LangiumDocument, ReferenceInfo, Scope, Stream } from "langium";
-import { isImport, isOntology, Ontology } from "./generated/ast.js";
+import { AstNode, AstNodeDescription, AstUtils, DefaultScopeComputation, DefaultScopeProvider, LangiumDocument, ReferenceInfo, Scope } from "langium";
+import { isImport, isMember, isOntology, Ontology } from "./generated/ast.js";
 import { CancellationToken } from "vscode-languageserver";
 
 export class OMLScopeComputation extends DefaultScopeComputation {
-    override async computeExportsForNode(parentNode: AstNode, document: LangiumDocument<AstNode>, children: (root: AstNode) => Iterable<AstNode> = AstUtils.streamContents, cancelToken: CancellationToken = CancellationToken.None): Promise<AstNodeDescription[]> {
-        const directChildren = AstUtils.streamContents
-        const exports: AstNodeDescription[] = [];
-        this.exportNode(parentNode, exports, document);
-        const candidateNodes: Stream<AstNode> = directChildren(parentNode).map((child: AstNode) => [child, directChildren(child)]).flat(2)
-        for (const node of candidateNodes) {
-            await interruptAndCheck(cancelToken);
-            this.exportNode(node, exports, document);
-        }
-        return exports;
+    override async computeExports(document: LangiumDocument, cancelToken = CancellationToken.None): Promise<AstNodeDescription[]> {
+        return this.computeExportsForNode(document.parseResult.value, document, AstUtils.streamAllContents, cancelToken);
     }
 
     protected override exportNode(node: AstNode, exports: AstNodeDescription[], document: LangiumDocument): void {
         if (isOntology(node) && node.namespace) {
             const { namespace } = node
             exports.push(this.descriptions.createDescription(node, namespace, document))
-        } else {
-            const unqualifiedName: string | undefined = this.nameProvider.getName(node)
-            const ontologyNamespace: string | undefined = (document.parseResult.value as Ontology)?.namespace
-            if (unqualifiedName &&  ontologyNamespace) {
-                const iri = this.createIRI(ontologyNamespace, unqualifiedName)
+        } else if (isMember(node) && node.name) {
+            const namespace = (document.parseResult.value as Ontology).namespace
+            if (namespace) {
+                const iri = namespace+node.name
                 exports.push(this.descriptions.createDescription(node, iri, document))
             }
         }
-    }
-
-    // Creates a qualified name for the given SpecializableTerm
-    // Should only be used with terms original to the given document
-    private createIRI = (namespace: string, name: string): string =>  {
-        return namespace + name
     }
 }
 
 export class OMLScopeProvider extends DefaultScopeProvider {
     override getScope(context: ReferenceInfo): Scope {
-        if (isImport(context.container))
-            return super.getScope(context)
-        const ontology = AstUtils.getDocument(context.container).parseResult.value as Ontology
-        const namespaceToPrefix: Map<string, string> = new Map()
+        if (isImport(context.container)) {
+            return this.getScopeforImport(context)
+        } else {
+            return this.getScopeforMember(context)
+        }
+    }
+
+    getScopeforImport(context: ReferenceInfo): Scope {
+        return super.getScope(context)
+    }
+
+    getScopeforMember(context: ReferenceInfo): Scope {
+        const namespaceToPrefix = new Map<string, string>();
+        const uris = new Set<string>();
+
+        // get the document
+        const document = AstUtils.getDocument(context.container);
+
+        // process current ontology
+        const ontology = document.parseResult.value as Ontology;
         namespaceToPrefix.set(ontology.namespace, ontology.prefix)
-        ontology.ownedImports.forEach((i) => {
+        uris.add(document.uri.toString())
+
+        // process imported ontologies
+        ontology.ownedImports.forEach(i => {
             if (i.prefix) {
                 namespaceToPrefix.set(i.imported.$refText, i.prefix)
+                if (i.imported.ref) {
+                    const importedDoc = AstUtils.getDocument(i.imported.ref)
+                    if (importedDoc) {
+                        uris.add(importedDoc.uri.toString())
+                    }
+                }
             }
         })
-        const scopes = super.getScope(context).getAllElements()
-            .filter((desc) => this.isMemberFromImportedOntology(namespaceToPrefix, desc.name))
-            .map(desc => {
-                const fullIRI = this.parseFullIRI(desc.name)
-                let s = [
-                    desc, 
-                    {...desc, name: this.getAbbreviatedIRI(namespaceToPrefix.get(fullIRI.namespace!)!, fullIRI.name)}
-                ]
-                if (fullIRI.namespace == ontology.namespace) {
-                    s = [...s, {...desc, name: fullIRI.name!} ]
-                }
-                return s;
-                }
-            ).flat()
-        return this.createScope(scopes)
+        
+        // get the reference type
+        const referenceType = this.reflection.getReferenceType(context);
+
+        //get all possible descriptions from these ontologies
+        const allDescriptions = this.indexManager.allElements(referenceType, uris).toArray();
+
+        // derive all possible candidate descritions using iri, abbrev iri, and name
+        const candidateDescriptions = new Set<AstNodeDescription>();
+        allDescriptions.forEach(i => {
+            // get iri and prefix
+            const [namespace, name] = this.getIri(i)
+            const prefix = namespaceToPrefix.get(namespace)
+            //TODO: without next line, resolving links does not work (not sure why)
+            candidateDescriptions.add(i);
+            // add full iri version
+            candidateDescriptions.add({...i, name:'<'+namespace+name+'>'});
+            // add abbrev iri version
+            candidateDescriptions.add({...i, name:prefix+':'+name});
+            // add name version if local ref
+            if (namespace == ontology.namespace) {
+                candidateDescriptions.add({...i, name:name});
+            }
+        })
+        
+        //convert them to descriptions inside of a scope
+        return this.createScope(candidateDescriptions);
     }
 
-    private isMemberFromImportedOntology = (importedOntologyNamespaces: Set<string> | Map<string, any>, IRI: string): boolean => {
-        const { namespace } = this.parseFullIRI(IRI)
-        return (namespace != undefined) ? importedOntologyNamespaces.has(namespace) : false
-    }
-    
-    private getAbbreviatedIRI = (prefix: string, name: string): string => {
-        return prefix + ':' + name
-    }
-    
-    private parseFullIRI = (fullIRI: string): IRI => {
-        var i = fullIRI.lastIndexOf('#')
+    getIri(desc: AstNodeDescription): [string, string] {
+        const iri = desc.name
+        let i = iri.lastIndexOf('#')
         if (i == -1) {
-            i = fullIRI.lastIndexOf('/')
+            i = iri.lastIndexOf('/')
         }
-        if (i == -1) {
-            return { name: fullIRI }
-        }
-        const namespace = fullIRI.substring(0, i+1)
-        const name = fullIRI.substring(i + 1, fullIRI.length)
-        return { namespace, name }
+        return [iri.substring(0, i+1), iri.substring(i+1, iri.length)]
     }
-}
 
-type IRI = {
-    namespace?: string,
-    name: string
 }
