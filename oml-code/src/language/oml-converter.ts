@@ -3,12 +3,8 @@ import {CstNode, DefaultValueConverter, GrammarAST, ValueType} from 'langium';
 export class OmlValueConverter extends DefaultValueConverter {
 
     protected override runConverter(rule: GrammarAST.AbstractRule, input: string, cstNode: CstNode): ValueType {
-        if (rule.name == 'NAMESPACE' || rule.name == 'IRI') {
-            // 'convertString' simply removes the first and last character of the input
+        if (rule.name == 'NAMESPACE' && cstNode.grammarSource.$type == 'RuleCall') {
             return input.substring(1, input.length-1)
-            //return super.runConverter(rule, input, cstNode);
-        } if (rule.name == 'ID' || rule.name == 'QNAME') {
-            return input.replaceAll('^', '')
         } else {
             return super.runConverter(rule, input, cstNode);
         }

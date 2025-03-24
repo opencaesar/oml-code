@@ -170,6 +170,7 @@ DescriptionStatement:
 
 Term:
 	SpecializableTerm |
+	RelationBase |
 	Property;
 
 Rule:
@@ -188,8 +189,8 @@ BuiltIn:
 
 SpecializableTerm:
     Type |
-	RelationBase |
 	SpecializableProperty;
+
 
 Property:
 	SpecializableProperty |
@@ -580,11 +581,11 @@ terminal IRI:											/<[^ ]*>/;
 
 terminal QNAME:											IDFRAG ':' IDFRAG;
 
-terminal ID:											IDFRAG;
+terminal ID:											'^'? IDFRAG;
 
 //----------------------------
 
-terminal fragment IDFRAG:								'^'? (ALPHA|NUMERIC|SPECIAL) (ALPHA|NUMERIC|SPECIAL|'$')*;
+terminal fragment IDFRAG:								(ALPHA|NUMERIC|SPECIAL) (ALPHA|NUMERIC|SPECIAL|'$')*;
 
 terminal fragment ALPHA:								/[a-zA-Z]/;
 

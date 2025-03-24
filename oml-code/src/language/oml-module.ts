@@ -2,8 +2,9 @@ import { type Module, inject } from 'langium';
 import { createDefaultModule, createDefaultSharedModule, type DefaultSharedModuleContext, type LangiumServices, type LangiumSharedServices, type PartialLangiumServices } from 'langium/lsp';
 import { OMLGeneratedModule, OmlGeneratedSharedModule } from './generated/module.js';
 import { OmlValidator, registerValidationChecks } from './oml-validator.js';
-import { OMLScopeComputation, OMLScopeProvider } from './oml-scope.js';
+import { OmlScopeComputation, OmlScopeProvider } from './oml-scope.js';
 import { OmlValueConverter } from './oml-converter.js';
+import { OmlCompletionProvider } from './oml-completion.js';
 
 /**
  * Declaration of custom services - add your own service classes here.
@@ -33,8 +34,11 @@ export const OmlModule: Module<OmlServices, PartialLangiumServices & OmlAddedSer
         OmlValidator: () => new OmlValidator()
     },
     references: {
-        ScopeComputation: (services) => new OMLScopeComputation(services),
-        ScopeProvider: (services) => new OMLScopeProvider(services)
+        ScopeComputation: (services) => new OmlScopeComputation(services),
+        ScopeProvider: (services) => new OmlScopeProvider(services)
+    },
+    lsp: {
+        CompletionProvider: (services) => new OmlCompletionProvider(services),
     }
 };
 
