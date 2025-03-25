@@ -1,4 +1,4 @@
-import { AstNode, AstNodeDescription, AstUtils, DefaultScopeComputation, DefaultScopeProvider, LangiumDocument, MultiMap, PrecomputedScopes, ReferenceInfo, Scope, Stream, stream } from "langium";
+import { AstNode, AstNodeDescription, AstUtils, DefaultScopeComputation, DefaultScopeProvider, EMPTY_SCOPE, LangiumDocument, MultiMap, PrecomputedScopes, ReferenceInfo, Scope, Stream, stream } from "langium";
 import { Concept, Description, DescriptionBundle, Entity, Import, isDescription, isDescriptionBundle, isImport, isMember, isOntology, isTerm, isVocabulary, isVocabularyBundle, Ontology, Relation, RelationEntity, Vocabulary, VocabularyBox, VocabularyBundle } from "./generated/ast.js";
 import { CancellationToken } from "vscode-languageserver";
 
@@ -40,7 +40,12 @@ export class OmlScopeComputation extends DefaultScopeComputation {
 export class OmlScopeProvider extends DefaultScopeProvider {
     override getScope(context: ReferenceInfo): Scope {
         const scopes: Array<Stream<AstNodeDescription>> = [];
-        const referenceType = this.getReferenceType(context);
+        var referenceType: string
+        try {
+            referenceType = this.getReferenceType(context);
+        } catch(error) {
+            return EMPTY_SCOPE
+        }
 
         const precomputed = AstUtils.getDocument(context.container).precomputedScopes;
         if (precomputed) {
