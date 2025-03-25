@@ -269,10 +269,9 @@ RelationEntity:
 	']')? (EntitySpecialization)? (EntityEquivalence)?;
 
 fragment EntitySpecialization infers Entity:
-	'<' ((ownedSpecializations+=SpecializationAxiom (',' ownedSpecializations+=SpecializationAxiom)*) |
-		((ownedSpecializations+=SpecializationAxiom (',' ownedSpecializations+=SpecializationAxiom)*)? '['
+	'<' (ownedSpecializations+=SpecializationAxiom (',' ownedSpecializations+=SpecializationAxiom)*)? ('['
 			ownedPropertyRestrictions+=PropertyRestrictionAxiom*
-		']'));
+		']')?;
 
 fragment EntityEquivalence infers Entity:
 	'=' ownedEquivalences+=EntityEquivalenceAxiom (',' ownedEquivalences+=EntityEquivalenceAxiom)*;

@@ -24,12 +24,6 @@ export class OmlScopeComputation extends DefaultScopeComputation {
             if (isMember(node) && node.name) {
                 localDescriptions.push(this.descriptions.createDescription(node, node.name, document));
                 localDescriptions.push(this.descriptions.createDescription(node, ontology.prefix+':'+node.name, document));
-            } else if (isImport(node) && node.imported?.ref && node.prefix) {
-                for (const nestedNode of AstUtils.streamAllContents(node.imported.ref)) {
-                    if (isMember(nestedNode) && nestedNode.name) {
-                        localDescriptions.push(this.descriptions.createDescription(nestedNode, node.prefix+':'+nestedNode.name, document));
-                    }
-                }
             }
         }
         scopes.addAll(ontology, localDescriptions);
@@ -60,11 +54,38 @@ export class OmlScopeProvider extends DefaultScopeProvider {
             } while (currentNode);
         }
 
+        if (!isImport(context.container)) {
+            const abbrevIriDescriptions = new Set<AstNodeDescription>();
+            const document = AstUtils.getDocument(context.container);
+            const ontology = document.parseResult.value as Ontology;
+            const namespaceToPrefix = new Map<string, string>();
+            ontology.ownedImports.filter(i => i.prefix).forEach(i => {
+                var namespace = i.imported.$refText
+                namespaceToPrefix.set(namespace.substring(1, namespace.length-1), i.prefix!)
+            })
+            this.indexManager.allElements(referenceType).forEach( i => {
+                const [namespace, name] = this.getIri(i.name)
+                const prefix = namespaceToPrefix.get(namespace)
+                if (prefix) {
+                    abbrevIriDescriptions.add({...i, name:prefix+':'+name})
+                }
+            })
+            scopes.push(stream(abbrevIriDescriptions))
+        }
+
         let result: Scope = this.getGlobalScope(referenceType, context);
         for (let i = scopes.length - 1; i >= 0; i--) {
             result = this.createScope(scopes[i], result);
         }
         return result;
+    }
+
+    getIri(iri: string): [string, string] {
+        var i = iri.lastIndexOf('#')
+        if (i == -1) {
+            i = iri.lastIndexOf('/')
+        }
+        return [iri.substring(1, i+1), iri.substring(i+1, iri.length-1)]
     }
 
     getReferenceType(context: ReferenceInfo) : string {
