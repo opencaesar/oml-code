@@ -1,5 +1,5 @@
 {
-    "name": "OML-Code",
+    "name": "oml-code",
     "description": "Please enter a brief description here",
     "version": "0.0.1",
     "type": "module",
@@ -20,7 +20,9 @@
         "serve": "npm run dev",
         "test": "vitest run",
         "vscode:prepublish": "npm run esbuild-base -- --minify && npm run lint",
-        "esbuild-base": "./node_modules/esbuild/bin/esbuild ./src/extension/main.ts --bundle --outfile=out/main.js --external:vscode --format=cjs --platform=node"
+        "esbuild-base": "./node_modules/esbuild/bin/esbuild ./src/extension/main.ts --bundle --outfile=out/main.js --external:vscode --format=cjs --platform=node",
+        "package": "vsce package",
+        "clean" : "./clean.sh"
         },
     "dependencies": {
         "langium": "~3.2.0",
