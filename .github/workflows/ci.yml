@@ -20,7 +20,9 @@ jobs:
         node-version: 22.x
         
     - name: Install dependencies
-      run: npm install
+      run: |
+        npm install
+        npm install -g @vscode/vsce 
 
     - name: Generate code
       run: npm run langium:generate
