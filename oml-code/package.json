@@ -2,27 +2,26 @@
     "name": "OML-Code",
     "description": "Please enter a brief description here",
     "version": "0.0.1",
-    "files": [
-        "bin",
-        "out",
-        "src"
-    ],
     "type": "module",
+    "repository": {
+        "url": "https://github.com/opencaesar/oml-code.git"
+    },
     "scripts": {
         "build": "tsc -b tsconfig.src.json && node esbuild.mjs",
         "watch": "concurrently -n tsc,esbuild -c blue,yellow \"tsc -b tsconfig.src.json --watch\" \"node esbuild.mjs --watch\"",
         "lint": "eslint src --ext ts",
         "langium:generate": "langium generate",
         "langium:watch": "langium generate --watch",
-        "vscode:prepublish": "npm run build && npm run lint",
         "build:web": "npm run build",
         "bundle": "vite build",
         "bundle:serve": "http-server ./dist --port 5175",
         "dev": "vite",
         "dev:debug": "vite --debug --force",
         "serve": "npm run dev",
-        "test": "vitest run"
-    },
+        "test": "vitest run",
+        "vscode:prepublish": "npm run esbuild-base -- --minify && npm run lint",
+        "esbuild-base": "./node_modules/esbuild/bin/esbuild ./src/extension/main.ts --bundle --outfile=out/main.js --external:vscode --format=cjs --platform=node"
+        },
     "dependencies": {
         "langium": "~3.2.0",
         "vscode-languageclient": "~9.0.1",
@@ -33,8 +32,7 @@
         "@codingame/monaco-vscode-keybindings-service-override": "~3.2.3",
         "monaco-editor": "npm:@codingame/monaco-vscode-editor-api@~3.2.3",
         "monaco-editor-wrapper": "~4.0.2",
-        "monaco-languageclient": "~8.1.1",
-        "vscode": "npm:@codingame/monaco-vscode-api@~3.2.3"
+        "monaco-languageclient": "~8.1.1"
     },
     "devDependencies": {
         "@types/node": "^18.0.0",
@@ -49,7 +47,8 @@
         "@codingame/esbuild-import-meta-url-plugin": "~1.0.2",
         "vite": "~5.2.7",
         "http-server": "~14.1.1",
-        "vitest": "~1.4.0"
+        "vitest": "~1.4.0",
+        "vscode": "npm:@codingame/monaco-vscode-api@~3.2.3"
     },
     "volta": {
         "node": "18.19.1",
