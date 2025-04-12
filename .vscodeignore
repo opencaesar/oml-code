@@ -1,4 +1,14 @@
+.github/
 .vscode/**
 .vscode-test/**
+test/**
+node_modules/
+src/
+
 .gitignore
 langium-quickstart.md
+tsconfig.json
+tsconfig.src.json
+
+*.sh
+**/*.map
