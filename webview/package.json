@@ -9,9 +9,13 @@
     },
     "devDependencies": {
         "esbuild": "^0.19.4",
-        "typescript": "~5.2.2"
+        "ts-loader": "^9.5.2",
+        "typescript": "~5.2.2",
+        "webpack": "^5.99.5",
+        "webpack-cli": "^6.0.1"
     },
     "scripts": {
-        "build": "esbuild ./src/index.ts --bundle --sourcemap --outfile=./static/index.js"
+        "build": "esbuild ./src/index.ts --bundle --sourcemap --outfile=./static/index.js",
+        "build:webview": "webpack --config webpack.config.js"
     }
 }
