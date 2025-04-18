@@ -1,10 +1,12 @@
 import { type Module, inject } from 'langium';
-import { createDefaultModule, createDefaultSharedModule, type DefaultSharedModuleContext, type LangiumServices, type LangiumSharedServices, type PartialLangiumServices } from 'langium/lsp';
+import { createDefaultModule, createDefaultSharedModule, type DefaultSharedModuleContext, type PartialLangiumServices } from 'langium/lsp';
 import { OMLGeneratedModule, OmlGeneratedSharedModule } from './generated/module.js';
 import { OmlValidator, registerValidationChecks } from './oml-validator.js';
 import { OmlScopeComputation, OmlScopeProvider } from './oml-scope.js';
 import { OmlValueConverter } from './oml-converter.js';
 import { OmlCompletionProvider } from './oml-completion.js';
+import { LangiumSprottyServices, LangiumSprottySharedServices, SprottyDefaultModule, SprottyDiagramServices, SprottySharedModule } from 'langium-sprotty';
+import { OMLDiagramGenerator } from './oml-diagram-generator.js';
 
 /**
  * Declaration of custom services - add your own service classes here.
@@ -19,14 +21,17 @@ export type OmlAddedServices = {
  * Union of Langium default services and your custom services - use this as constructor parameter
  * of custom service classes.
  */
-export type OmlServices = LangiumServices & OmlAddedServices
+export type OmlServices = LangiumSprottyServices & OmlAddedServices
 
 /**
  * Dependency injection module that overrides Langium default services and contributes the
  * declared custom services. The Langium defaults can be partially specified to override only
  * selected services, while the custom services must be fully specified.
  */
-export const OmlModule: Module<OmlServices, PartialLangiumServices & OmlAddedServices> = {
+export const OmlModule: Module<OmlServices, PartialLangiumServices & SprottyDiagramServices & OmlAddedServices> = {
+    diagram: {
+        DiagramGenerator: services => new OMLDiagramGenerator(services)
+    },
     parser: {
         ValueConverter: () => new OmlValueConverter()
     },
@@ -58,16 +63,18 @@ export const OmlModule: Module<OmlServices, PartialLangiumServices & OmlAddedSer
  * @returns An object wrapping the shared services and the language-specific services
  */
 export function createOmlServices(context: DefaultSharedModuleContext): {
-    shared: LangiumSharedServices,
+    shared: LangiumSprottySharedServices,
     Oml: OmlServices
 } {
     const shared = inject(
         createDefaultSharedModule(context),
-        OmlGeneratedSharedModule
+        OmlGeneratedSharedModule,
+        SprottySharedModule
     );
     const Oml = inject(
         createDefaultModule({ shared }),
         OMLGeneratedModule,
+        SprottyDefaultModule,
         OmlModule
     );
     shared.ServiceRegistry.register(Oml);
