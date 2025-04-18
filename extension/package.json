@@ -1,0 +1,199 @@
+{
+    "name": "oml-extension-langium",
+    "displayName": "States Example (Langium)",
+    "description": "An example Xtext-based DSL with Sprotty diagrams for statemachines",
+    "private": true,
+    "author": {
+        "name": "Eclipse Sprotty"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/eclipse-sprotty/sprotty-vscode",
+        "directory": "examples/states-langium/extension"
+    },
+    "version": "0.6.0",
+    "engines": {
+        "vscode": "^1.46.0"
+    },
+    "categories": [
+        "Programming Languages"
+    ],
+    "icon": "icon.png",
+    "contributes": {
+        "languages": [
+            {
+                "id": "states",
+                "aliases": [
+                    "states",
+                    "sm"
+                ],
+                "extensions": [
+                    ".sm"
+                ],
+                "configuration": "./language-configuration.json"
+            }
+        ],
+        "grammars": [
+            {
+                "language": "states",
+                "scopeName": "source.states",
+                "path": "./syntaxes/states.tmLanguage.json"
+            }
+        ],
+        "customEditors": [
+            {
+                "viewType": "states",
+                "displayName": "States Editor",
+                "selector": [
+                    {
+                        "filenamePattern": "*.sm"
+                    }
+                ],
+                "priority": "option"
+            }
+        ],
+        "viewsContainers": {
+            "activitybar": [
+                {
+                    "id": "states-container",
+                    "title": "States",
+                    "icon": "$(symbol-structure)"
+                }
+            ]
+        },
+        "views": {
+            "states-container": [
+                {
+                    "id": "states",
+                    "type": "webview",
+                    "name": "State Machine",
+                    "icon": "./icon.png"
+                }
+            ]
+        },
+        "commands": [
+            {
+                "command": "states.diagram.open",
+                "title": "Open in Diagram",
+                "icon": "$(symbol-structure)",
+                "category": "States Diagram"
+            },
+            {
+                "command": "states.diagram.fit",
+                "title": "Fit to Screen",
+                "category": "States Diagram"
+            },
+            {
+                "command": "states.diagram.center",
+                "title": "Center selection",
+                "category": "States Diagram"
+            },
+            {
+                "command": "states.diagram.delete",
+                "title": "Delete selected element",
+                "category": "States Diagram"
+            },
+            {
+                "command": "states.diagram.export",
+                "title": "Export diagram to SVG",
+                "category": "States Diagram"
+            }
+        ],
+        "menus": {
+            "commandPalette": [
+                {
+                    "command": "states.diagram.open",
+                    "when": "editorLangId == 'states'"
+                },
+                {
+                    "command": "states.diagram.fit",
+                    "when": "states-focused"
+                },
+                {
+                    "command": "states.diagram.center",
+                    "when": "states-focused"
+                },
+                {
+                    "command": "states.diagram.delete",
+                    "when": "states-focused"
+                },
+                {
+                    "command": "states.diagram.export",
+                    "when": "states-focused"
+                }
+            ],
+            "editor/context": [
+                {
+                    "command": "states.diagram.open",
+                    "when": "editorLangId == 'states'",
+                    "group": "navigation"
+                }
+            ],
+            "editor/title": [
+                {
+                    "command": "states.diagram.open",
+                    "when": "editorLangId == 'states'",
+                    "group": "navigation"
+                }
+            ],
+            "explorer/context": [
+                {
+                    "command": "states.diagram.open",
+                    "when": "resourceExtname == '.sm'",
+                    "group": "navigation"
+                }
+            ]
+        },
+        "keybindings": [
+            {
+                "key": "alt+f",
+                "mac": "alt+f",
+                "command": "states.diagram.fit",
+                "when": "states-focused"
+            },
+            {
+                "key": "alt+c",
+                "mac": "alt+c",
+                "command": "states.diagram.center",
+                "when": "states-focused"
+            },
+            {
+                "key": "alt+e",
+                "mac": "alt+e",
+                "command": "states.diagram.export",
+                "when": "states-focused"
+            },
+            {
+                "key": "delete",
+                "mac": "delete",
+                "command": "states.diagram.delete",
+                "when": "states-focused"
+            }
+        ]
+    },
+    "activationEvents": [
+        "onWebviewPanel:states"
+    ],
+    "files": [
+        "lib",
+        "extension",
+        "server",
+        "syntaxes",
+        "webview"
+    ],
+    "main": "./pack/extension/src/states-extension.cjs",
+    "devDependencies": {
+        "@types/node": "^14.17.3",
+        "@types/vscode": "1.50.0",
+        "esbuild": "^0.25.0",
+        "sprotty-vscode": "^1.0.0",
+        "vscode-languageclient": "^9.0.1"
+    },
+    "scripts": {
+        "build": "node esbuild.mjs",
+        "watch": "node esbuild.mjs --watch"
+    },
+    "dependencies": {
+        "vscode-messenger": "^0.5.1"
+    }
+}

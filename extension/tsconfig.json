@@ -1,0 +1,17 @@
+{
+	"compilerOptions": {
+    "module": "es6",
+    "rootDir": "src",
+    "outDir": "out",
+    "lib": [
+      "es2019"
+    ],
+    "declaration": false,
+    "declarationMap": false,
+    "baseUrl": ".",
+    "moduleResolution": "node"
+  },
+  "include": [
+    "src"
+  ]
+}
